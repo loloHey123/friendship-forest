@@ -52,11 +52,11 @@
   @media (max-width: 980px) { .illus { display: none; } }
 
   .brandrow { display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 26px; }
+    gap: 10px; flex-wrap: wrap; margin-bottom: 26px; }
   .wordmark { display: flex; align-items: center; gap: 9px; font-weight: 800;
     font-size: 19px; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
   .wordmark .mark { width: 30px; height: 30px; border-radius: 9px; background: var(--lime);
-    display: grid; place-items: center; font-size: 16px; }
+    background-image: url(icons/icon-192.png); background-size: cover; image-rendering: pixelated; }
   .forestlink { font-size: 13px; font-weight: 700; color: var(--green);
     text-decoration: none; padding: 9px 16px; border-radius: 999px;
     border: 1.5px solid var(--line); }
@@ -80,9 +80,9 @@
   @media (prefers-reduced-motion: reduce) { .step { animation: none; } }
   .step .grow-space { flex: 1; }
 
-  h1 { font-size: 46px; line-height: 1.04; margin: 6px 0 16px; letter-spacing: -0.03em;
+  h1 { font-size: clamp(31px, 7.5vw, 46px); line-height: 1.04; margin: 6px 0 16px; letter-spacing: -0.03em;
     font-weight: 800; text-wrap: balance; }
-  h2 { font-size: 36px; line-height: 1.08; margin: 6px 0 14px; letter-spacing: -0.025em;
+  h2 { font-size: clamp(26px, 6.5vw, 36px); line-height: 1.08; margin: 6px 0 14px; letter-spacing: -0.025em;
     font-weight: 800; text-wrap: balance; }
   .lead { font-size: 16px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 20px;
     max-width: 56ch; font-weight: 500; }
@@ -185,54 +185,44 @@
     max-width: 56ch; }
   .privacy b { color: var(--ink); }
 
-  /* ============ COZY MODE — the previous design, toggleable ============ */
-  body.cozy { background: radial-gradient(120% 90% at 50% -10%, #eaf6d8, #b9dfa0 55%, #8fca6a); }
-  @media (prefers-color-scheme: dark) {
-    body.cozy { background: radial-gradient(120% 90% at 50% -10%, #101f16, #16281d 55%, #1d3524); }
+
+  /* upload feedback: reading bar, then a solid check state */
+  .drop.busy { border-style: solid; border-color: var(--lime-deep); color: var(--ink); }
+  .drop.busy::after { content: ""; display: block; height: 4px; margin-top: 12px;
+    border-radius: 2px; background: linear-gradient(90deg, var(--lime-deep), var(--lime), var(--lime-deep));
+    background-size: 200% 100%; animation: upbar 1.1s linear infinite; }
+  @keyframes upbar { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .drop.busy::after { animation: none; } }
+  .field-err { color: #c94f4f; font-size: 13px; font-weight: 600; margin-top: 7px; display: none; }
+  .field-err.show { display: block; }
+  .resume-note { font-size: 13px; font-weight: 600; color: var(--ink-soft);
+    background: var(--strip); border-radius: 12px; padding: 9px 14px; margin: 10px 0 0;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .resume-note button { font: inherit; color: var(--green); background: none;
+    border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+  .mchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .mchip { font-size: 13px; font-weight: 700; color: var(--ink); background: var(--strip);
+    border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
+    cursor: pointer; }
+  .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
+  @media (max-width: 560px) {
+    body { padding: 10px; }
+    .frame { border-radius: 26px; padding: 8px; }
+    .app { border-radius: 20px; min-height: calc(100vh - 56px); }
+    .content { padding: 22px 18px 24px; }
+    .btnrow { flex-wrap: wrap; }
+    .btnrow .btn.primary { width: 100%; justify-content: center; text-align: center; }
+    .card { padding: 15px 16px; }
+    .card .go { position: static; display: inline-block; margin-top: 6px; }
   }
-  :root[data-theme="dark"] body.cozy { background: radial-gradient(120% 90% at 50% -10%, #101f16, #16281d 55%, #1d3524); }
-  body.cozy .frame { background: transparent; padding: 0; box-shadow: none;
-    max-width: 620px; }
-  body.cozy .app { display: block; min-height: 0; background: var(--card);
-    border: 2px solid var(--line); border-radius: 30px; overflow: visible;
-    box-shadow: 0 24px 70px var(--shadow); backdrop-filter: blur(14px); }
-  body.cozy .content { padding: 28px 32px 30px; }
-  body.cozy .illus { display: none; }
-  body.cozy h1 { font-size: 38px; }
-  body.cozy h2 { font-size: 30px; }
-  body.cozy .cardstrip { background: transparent; padding: 0; }
-  body.cozy .card { border: 1.5px solid var(--line); }
-  .scene { display: none; position: fixed; border-radius: 22px; overflow: hidden;
-    z-index: 0; box-shadow: 0 14px 34px var(--shadow); border: 2px solid var(--line);
-    pointer-events: none; opacity: 0.95; }
-  body.cozy .scene { display: block; }
-  .scene canvas { display: block; image-rendering: pixelated; }
-  @keyframes bob1 { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-14px) rotate(-2deg); } }
-  @keyframes bob2 { 0%,100% { transform: translateY(-8px) rotate(2.5deg); } 50% { transform: translateY(8px) rotate(2.5deg); } }
-  @keyframes bob3 { 0%,100% { transform: translateY(4px) rotate(-1deg); } 50% { transform: translateY(-10px) rotate(-1.5deg); } }
-  .s1 { left: max(12px, calc(50vw - 620px)); top: 12vh; animation: bob1 7s ease-in-out infinite; }
-  .s2 { left: max(-30px, calc(50vw - 570px)); bottom: 9vh; animation: bob2 9s ease-in-out infinite; }
-  .s3 { right: max(12px, calc(50vw - 620px)); top: 9vh; animation: bob3 8s ease-in-out infinite; }
-  .s4 { right: max(-20px, calc(50vw - 560px)); bottom: 13vh; animation: bob1 10s ease-in-out infinite; }
-  @media (max-width: 1100px) { body.cozy .scene { display: none; } }
-  @media (prefers-reduced-motion: reduce) { .scene { animation: none !important; } }
-  .designtoggle { font-family: var(--mono); font-size: 10.5px; font-weight: 700;
-    cursor: pointer; color: var(--ink-soft); background: var(--strip);
-    border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 14px;
-    margin-right: 8px; }
-  .designtoggle:hover { border-color: var(--lime-deep); color: var(--ink); }
 </style>
 
-<div class="scene s1"><canvas id="sc1" width="150" height="170"></canvas></div>
-<div class="scene s2"><canvas id="sc2" width="170" height="130"></canvas></div>
-<div class="scene s3"><canvas id="sc3" width="160" height="150"></canvas></div>
-<div class="scene s4"><canvas id="sc4" width="150" height="140"></canvas></div>
 
 <div class="frame"><div class="app">
 <div class="content">
   <div class="brandrow">
-    <a class="wordmark" href="#"><span class="mark">🌳</span>friendship</a>
-    <span><button class="designtoggle" id="design-toggle">✦ design: modern</button><a class="forestlink" href="forest.html" target="_blank" rel="noopener">see the demo forest →</a></span>
+    <a class="wordmark" href="#"><span class="mark"></span>Friend Forest</a>
+    <a class="forestlink" href="forest.html" target="_blank" rel="noopener">see the demo forest →</a>
   </div>
   <div class="progress-zone" id="progress-zone">
     <div class="progress" id="progress"></div>
@@ -241,25 +231,25 @@
 
   <!-- STEP 0 · welcome -->
   <section class="step on" data-step="0">
-    <div class="rocket">🌳🚀</div>
     <h1>Plant your people.<br>Grow a forest.</h1>
-    <p class="lead">Every person you know becomes a tree — friends cluster into groves,
-      close friendships grow tall, drifting ones turn autumn and ask for water.
-      Walk it like a cozy farming game. <strong>Remember everyone, forever.</strong></p>
-    <div class="privacy">🔒 <span><b>Your people stay yours.</b> Everything is parsed and
-      stored on <b>your device only</b> — contacts and messages never touch a server.
-      Delete it all anytime.</span></div>
+    <p class="lead">Every person you know becomes a tree. Friends cluster into groves,
+      close friendships grow tall, and the ones drifting away turn autumn and ask for
+      a little water. Walk around it like a farming game.
+      <strong>Remember everyone.</strong></p>
+    <div class="privacy"><span><b>Your people stay yours.</b> Everything is parsed and
+      stored on this device. Contacts and messages never touch a server, and you can
+      delete everything whenever you like.</span></div>
     <div class="grow-space"></div>
     <div class="btnrow">
-      <button class="btn primary" data-next>Plant my first seed 🌱</button>
+      <button class="btn primary" data-next>Start planting</button>
     </div>
   </section>
 
   <!-- STEP 1 · you -->
   <section class="step" data-step="1">
     <h2>Who's tending<br>this forest?</h2>
-    <p class="lead">Your name helps us spot <em>you</em> in your own data (so you don't
-      become a tree in your own forest), and your city plants your home meadow.</p>
+    <p class="lead">Your name helps us spot you in your own data, so you don't end up
+      as a tree in your own forest. Your city plants your home meadow.</p>
     <div class="field"><label for="f-name">Your name</label>
       <input id="f-name" placeholder="e.g. Alex Rivera" autocomplete="name"></div>
     <div class="field"><label for="f-city">Your city</label>
@@ -274,45 +264,42 @@
   <!-- STEP 2 · sources hub -->
   <section class="step" data-step="2">
     <h2>Where should your<br>forest grow from?</h2>
-    <p class="lead">Pick a seed packet to open it. <strong>Start with the 2-minute one</strong> —
-      your forest sprouts today; the slow ones just make it richer whenever they arrive.</p>
+    <p class="lead">Pick a source to open it. <strong>Start with the quick one</strong> —
+      your forest sprouts today. The slower ones make it richer whenever they arrive.</p>
     <div class="cardstrip">
       <button class="card" data-goto="3"><span class="badge">✓</span><span class="go" id="hub-c">open →</span>
-        <h3>📇 Contacts <span class="tag fast">2 min · start here</span></h3>
+        <h3>Contacts <span class="tag fast">2 min · start here</span></h3>
         <p>Names, numbers, birthdays, jobs. The skeleton of your forest.</p></button>
       <button class="card" data-goto="4"><span class="badge">✓</span><span class="go" id="hub-l">open →</span>
-        <h3>💼 LinkedIn <span class="tag wait">~24h email wait</span></h3>
-        <p>Jobs, companies, cities — fills in "wait, what does she do again?"</p></button>
-      <button class="card" data-goto="5"><span class="badge">✓</span><span class="go" id="hub-i">open →</span>
-        <h3>📷 Instagram &amp; Messenger <span class="tag wait">hours–days wait</span></h3>
-        <p>DMs and followers — friends you never text but always see.</p></button>
+        <h3>LinkedIn <span class="tag wait">~24h email wait</span></h3>
+        <p>Jobs, companies, cities. Fills in "wait, what does she do again?"</p></button>
       <button class="card" data-goto="6"><span class="badge">✓</span><span class="go" id="hub-m">open →</span>
-        <h3>💬 Messages <span class="tag mac">Mac only · the good stuff</span></h3>
-        <p>Your actual texting history — what makes trees feel <em>alive</em>.</p></button>
+        <h3>iMessage <span class="tag mac">Mac only</span></h3>
+        <p>Your real texting history. It's what makes trees feel alive.</p></button>
       <button class="card" data-goto="10"><span class="badge">✓</span><span class="go" id="hub-w">open →</span>
-        <h3>🟢 WhatsApp <span class="tag fast">a few minutes</span></h3>
-        <p>Export your favorite chats as .txt — texting history for the rest of the world.</p></button>
+        <h3>WhatsApp <span class="tag fast">a few minutes</span></h3>
+        <p>Export your favorite chats. Texting history for everyone else.</p></button>
       <button class="card" data-goto="9"><span class="badge">✓</span><span class="go" id="hub-h">open →</span>
-        <h3>✍️ By hand <span class="tag fast">always works</span></h3>
-        <p>No exports needed — type in friends one at a time, starting with your favorites.</p></button>
+        <h3>By hand <span class="tag fast">always works</span></h3>
+        <p>No exports needed. Type friends in one at a time, starting with your favorites.</p></button>
     </div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn" data-back>Back</button>
-      <button class="btn primary" data-goto="7">Done collecting ✨</button>
+      <button class="btn primary" data-goto="7">I'm done collecting</button>
     </div>
   </section>
 
   <!-- STEP 3 · contacts -->
   <section class="step" data-step="3">
-    <h2>📇 Export your contacts</h2>
+    <h2>Export your contacts</h2>
     <ol class="howto">
       <li><b>Google:</b> contacts.google.com → select all → Export → Google CSV</li>
       <li><b>Apple:</b> Contacts app → select all → File → Export → Export vCard</li>
-      <li>Drop the file below 👇 (both .csv and .vcf work)</li>
+      <li>Drop the file below — both .csv and .vcf work</li>
     </ol>
     <label class="drop" id="drop-contacts">
-      <span class="big">📇</span><span id="drop-contacts-txt">drop <b>contacts.csv</b> or <b>.vcf</b> here — or click to browse</span>
+      <span id="drop-contacts-txt">Drop <b>contacts.csv</b> or <b>.vcf</b> here, or click to browse</span>
       <input type="file" accept=".csv,.vcf,text/csv,text/vcard">
     </label>
     <div class="grow-space"></div>
@@ -323,44 +310,26 @@
 
   <!-- STEP 4 · linkedin -->
   <section class="step" data-step="4">
-    <h2>💼 Request LinkedIn<br>(then forget about it)</h2>
+    <h2>Request your LinkedIn export<br>(then forget about it)</h2>
     <ol class="howto">
       <li>LinkedIn → <b>Settings → Data privacy → Get a copy of your data</b></li>
       <li>Choose the <b>larger archive</b> → Request</li>
-      <li>Email arrives in ~24h — come back and drop <b>Connections.csv</b> here</li>
+      <li>The email arrives in about a day. Come back and drop <b>Connections.csv</b> here</li>
     </ol>
     <label class="drop" id="drop-linkedin">
-      <span class="big">💼</span><span id="drop-linkedin-txt">already have it? drop <b>Connections.csv</b></span>
+      <span id="drop-linkedin-txt">Already have it? Drop <b>Connections.csv</b> here</span>
       <input type="file" accept=".csv,text/csv">
     </label>
-    <p class="hint">No file yet? That's the expected path — come back and drop it any time.</p>
+    <p class="hint">No file yet? That's normal. Your progress is saved, so come back and drop it any time.</p>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
     </div>
   </section>
 
-  <!-- STEP 5 · instagram/messenger -->
-  <section class="step" data-step="5">
-    <h2>📷 Request Instagram<br>&amp; Messenger</h2>
-    <ol class="howto">
-      <li>Instagram → <b>Settings → Accounts Center → Download your information</b></li>
-      <li><b>Some of your information</b> → check <b>Messages</b> + <b>Followers and following</b></li>
-      <li>Format <b>JSON</b> · Date range <b>All time</b> → Submit</li>
-      <li>Repeat for your <b>Facebook account</b> (Messenger)</li>
-    </ol>
-    <p class="hint">The zips arrive by email in hours–days. The full app unpacks them here;
-      this prototype can't unzip in-browser yet — request now so they're ready. 📬</p>
-    <div class="grow-space"></div>
-    <div class="btnrow">
-      <button class="btn primary" data-goto="2">✓ Requested — back to sources</button>
-      <button class="btn ghost" data-goto="2">skip</button>
-    </div>
-  </section>
-
   <!-- STEP 6 · messages -->
   <section class="step" data-step="6">
-    <h2>💬 On a Mac?<br>Unlock the magic.</h2>
+    <h2>On a Mac?<br>Add your real texting history.</h2>
     <p class="lead">Websites can't read your texts (good!). This helper runs
       <strong>on your Mac, offline</strong> — it counts who you text and when, writes one
       summary file, touches nothing else.</p>
@@ -372,9 +341,9 @@
     <pre class="script" id="mac-script">python3 helper/extract_messages.py ~/Desktop/friend-forest-messages.json</pre>
     <p class="hint">The helper lives in this repo's <b>helper/</b> folder — it counts who you
       text and when, writes one summary file, and never uploads anything.</p>
-    <button class="copybtn" id="copy-script">📋 copy command</button>
+    <button class="copybtn" id="copy-script">Copy command</button>
     <label class="drop" id="drop-messages">
-      <span class="big">💬</span><span id="drop-messages-txt">drop <b>friend-forest-messages.json</b> here</span>
+      <span id="drop-messages-txt">Drop <b>friend-forest-messages.json</b> here</span>
       <input type="file" accept=".json,application/json">
     </label>
     <div class="grow-space"></div>
@@ -386,7 +355,7 @@
 
   <!-- STEP 9 · manual add -->
   <section class="step" data-step="9">
-    <h2>✍️ Plant friends<br>by hand</h2>
+    <h2>Plant friends<br>by hand</h2>
     <p class="lead">Name is all that's required — everything else just makes their tree richer.
       Groups (like <em>book club</em> or <em>college</em>) become groves in your forest.</p>
     <div class="field"><label for="m-name">Name</label>
@@ -398,9 +367,9 @@
     <div class="field"><label for="m-note">A note about them</label>
       <input id="m-note" placeholder="e.g. met at Sam's party, makes great ceramics"></div>
     <div class="btnrow" style="margin-top:4px">
-      <button class="btn primary" id="m-add">＋ Plant this friend</button>
+      <button class="btn primary" id="m-add">Add this friend</button>
     </div>
-    <div id="m-list" class="hint" style="margin-top:10px"></div>
+    <div id="m-list" class="mchips"></div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
@@ -409,17 +378,17 @@
 
   <!-- STEP 10 · whatsapp -->
   <section class="step" data-step="10">
-    <h2>🟢 Export WhatsApp<br>chats</h2>
+    <h2>Export a few<br>WhatsApp chats</h2>
     <ol class="howto">
       <li>Open a chat → tap the name → <b>Export chat</b> → <b>Without media</b></li>
       <li>Save / AirDrop the <b>.txt</b> to this device (unzip if needed)</li>
-      <li>Repeat for your favorite people, then drop them all below 👇</li>
+      <li>Repeat for your favorite people, then drop them all below</li>
     </ol>
     <label class="drop" id="drop-whatsapp">
-      <span class="big">🟢</span><span id="drop-whatsapp-txt">drop <b>WhatsApp Chat with ….txt</b> files here (several at once is fine)</span>
+      <span id="drop-whatsapp-txt">Drop <b>WhatsApp Chat with ….txt</b> files here — several at once is fine</span>
       <input type="file" accept=".txt,text/plain" multiple>
     </label>
-    <p class="hint">Only message counts and dates are used — never the messages themselves.</p>
+    <p class="hint">Only message counts and dates are used, never the messages themselves.</p>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
@@ -428,33 +397,34 @@
 
   <!-- STEP 7 · AI -->
   <section class="step" data-step="7">
-    <h2>🤖 Let Claude write<br>the field guide</h2>
+    <h2>Let Claude write<br>the field guide</h2>
     <p class="lead">Optional: with <strong>your own Anthropic API key</strong>, Claude writes a
       short living profile for your closest friends — who they are, how you probably met, what
       groves fit them. Skip it and you still get the full forest, just with simpler name cards.</p>
-    <div class="privacy">👀 <span><b>How it works:</b> your browser calls Claude directly with
-      your key — no server in between, and the key is only kept for this session. Cost lands on
-      your key (typically a few cents for ~30 profiles).
-      Get a key at <b>console.anthropic.com</b>.</span></div>
+    <div class="privacy"><span><b>How it works:</b> your browser calls Claude directly with
+      your key. No server in between, and the key is only kept for this session. The cost
+      lands on your key — typically a few cents for about 30 profiles. You can get a key
+      at <b>console.anthropic.com</b>.</span></div>
     <div class="field" style="margin-top:12px"><label for="f-key">Anthropic API key</label>
-      <input id="f-key" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
+      <input id="f-key" type="password" placeholder="sk-ant-…" autocomplete="off">
+      <div class="field-err" id="key-err">Paste a key first, or choose "Skip this".</div></div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn" data-back>Back</button>
-      <button class="btn primary" data-next id="ai-yes">✨ Use my key — enrich my forest</button>
-      <button class="btn ghost" data-next>skip AI</button>
+      <button class="btn primary" data-next id="ai-yes">Use my key and enrich my forest</button>
+      <button class="btn ghost" data-next>Skip this</button>
     </div>
   </section>
 
   <!-- STEP 8 · grow -->
   <section class="step" data-step="8">
-    <h2 id="final-title">🌱 Time to plant.</h2>
+    <h2 id="final-title">Time to plant.</h2>
     <p class="lead" id="final-lead">Here's what your forest will grow from:</p>
     <div class="statgrid" id="stats"></div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn" data-back>Back</button>
-      <button class="btn primary" id="grow">🌳 Grow my forest</button>
+      <button class="btn primary" id="grow">Grow my forest</button>
     </div>
     <p class="hint" id="grow-note"></p>
   </section>
@@ -471,19 +441,30 @@
   let step = 0;
   const TOTAL = 8; // steps 1..8 shown in the dash meter
 
+  /* progress survives leaving: everything but the API key is drafted to this browser */
+  function saveDraft() {
+    try {
+      localStorage.setItem("ff-draft", JSON.stringify({
+        step, name: state.name, city: state.city, contacts: state.contacts,
+        linkedin: state.linkedin, messages: state.messages,
+        whatsapp: state.whatsapp, manual: state.manual }));
+    } catch (e) {}
+  }
+
   function renderProgress() {
     const zone = document.getElementById("progress-zone");
     if (step === 0) { zone.style.visibility = "hidden"; return; }
     zone.style.visibility = "visible";
+    const disp = step > 8 ? 2 : Math.min(step, TOTAL);   // by-hand / whatsapp are part of "sources"
     document.getElementById("progress").innerHTML =
       Array.from({ length: TOTAL }, (_, i) =>
-        '<div class="dash ' + (i < Math.min(step, TOTAL) - 1 ? "done"
-          : i === Math.min(step, TOTAL) - 1 ? "now" : "") + '"></div>'
+        '<div class="dash ' + (i < disp - 1 ? "done" : i === disp - 1 ? "now" : "") + '"></div>'
       ).join("");
-    document.getElementById("steplabel").textContent = Math.min(step, TOTAL) + " of " + TOTAL;
+    document.getElementById("steplabel").textContent = disp + " of " + TOTAL;
   }
   function go(n) {
     step = Math.max(0, Math.min(10, n));
+    if (step > 0) saveDraft();
     document.querySelectorAll(".step").forEach(s =>
       s.classList.toggle("on", +s.dataset.step === step));
     renderProgress();
@@ -494,10 +475,15 @@
   document.querySelectorAll("[data-next]").forEach(b =>
     b.addEventListener("click", () => {
       if (step === 1) { state.name = document.getElementById("f-name").value.trim();
-        state.city = document.getElementById("f-city").value.trim(); }
+        state.city = document.getElementById("f-city").value.trim(); saveDraft(); }
       if (b.id === "ai-yes") {
         state.key = (document.getElementById("f-key").value || "").trim();
-        if (!state.key) { document.getElementById("f-key").focus(); return; }
+        if (!state.key) {
+          document.getElementById("key-err").classList.add("show");
+          document.getElementById("f-key").focus();
+          return;
+        }
+        document.getElementById("key-err").classList.remove("show");
         state.ai = true;
       }
       go(step + 1);
@@ -520,13 +506,18 @@
     mark("hub-m", state.messages.length);
     mark("hub-w", state.whatsapp.length);
     mark("hub-h", state.manual.length);
+    saveDraft();
   }
 
   /* ---------- manual add ---------- */
   function renderManual() {
-    document.getElementById("m-list").innerHTML = state.manual.length
-      ? "🌱 planted: " + state.manual.map(m => "<b>" + m.name + "</b>").join(", ")
-      : "";
+    const box = document.getElementById("m-list");
+    box.innerHTML = state.manual.map((m, i) =>
+      '<button type="button" class="mchip" data-rm="' + i + '" title="Remove">' +
+      esc2(m.name) + ' ✕</button>').join("");
+    box.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => {
+      state.manual.splice(+b.dataset.rm, 1); renderManual(); saveDraft();
+    }));
   }
   document.getElementById("m-add").addEventListener("click", () => {
     const get = id => document.getElementById(id).value.trim();
@@ -536,7 +527,7 @@
     ["m-name", "m-group", "m-city", "m-note"].forEach(id =>
       document.getElementById(id).value = "");
     document.getElementById("m-name").focus();
-    renderManual();
+    renderManual(); saveDraft();
   });
 
   /* ---------- CSV parsing ---------- */
@@ -568,15 +559,28 @@
   function wireDrop(id, onFile) {
     const zone = document.getElementById(id);
     const input = zone.querySelector("input");
+    const txt = zone.querySelector("span[id$='-txt']");
+    const begin = f => {
+      zone.classList.remove("ok", "err"); zone.classList.add("busy");
+      zone.dataset.busyAt = Date.now();
+      if (txt) txt.innerHTML = "Reading <b>" + esc2(f.name) + "</b>…";
+      onFile(f, zone);
+    };
     zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("over"));
     zone.addEventListener("drop", e => { e.preventDefault(); zone.classList.remove("over");
-      [...e.dataTransfer.files].forEach(f => onFile(f, zone)); });
-    input.addEventListener("change", () => { [...input.files].forEach(f => onFile(f, zone)); });
+      [...e.dataTransfer.files].forEach(begin); });
+    input.addEventListener("change", () => { [...input.files].forEach(begin); input.value = ""; });
   }
   function zoneMsg(zone, txtId, ok, msg) {
-    zone.classList.toggle("ok", ok); zone.classList.toggle("err", !ok);
-    document.getElementById(txtId).innerHTML = msg;
+    // let the reading bar breathe for a beat so fast parses still read as progress
+    const wait = Math.max(0, 600 - (Date.now() - (+zone.dataset.busyAt || 0)));
+    setTimeout(() => {
+      zone.classList.remove("busy");
+      zone.classList.toggle("ok", ok); zone.classList.toggle("err", !ok);
+      document.getElementById(txtId).innerHTML = ok ? "✓ " + msg : msg;
+      saveDraft();
+    }, wait);
   }
 
   /* vCard (.vcf) — Apple Contacts' default export format */
@@ -609,22 +613,22 @@
         state.contacts = parseVCF(text);
         if (!state.contacts.length) {
           zoneMsg(zone, "drop-contacts-txt", false,
-            "no contacts found in that vCard — try re-exporting?");
+            "No contacts found in that vCard. Try exporting again from the Contacts app?");
           return;
         }
         const withB = state.contacts.filter(c => c.birthday).length;
         const withJ = state.contacts.filter(c => c.org || c.title).length;
         zoneMsg(zone, "drop-contacts-txt", true,
-          "🌱 <b>" + state.contacts.length + " people found!</b> " +
-          withJ + " with jobs · " + withB + " with birthdays");
-        setTimeout(() => go(2), 1600);
+          "<b>" + state.contacts.length + " people found</b> — " +
+          withJ + " with jobs, " + withB + " with birthdays");
+        setTimeout(() => go(2), 2200);
         return;
       }
       const rows = parseCSV(text);
       const head = rows[0] ? rows[0].join(",").toLowerCase() : "";
       if (!/first name|given name/.test(head)) {
         zoneMsg(zone, "drop-contacts-txt", false,
-          "hmm — no \"First Name\" column found. Try the Google CSV export?");
+          "That file doesn't look like a contacts export — no \"First Name\" column. Try the Google CSV or Apple vCard export?");
         return;
       }
       const objs = toObjects(rows, 0);
@@ -642,9 +646,9 @@
       const withB = state.contacts.filter(c => c.birthday).length;
       const withJ = state.contacts.filter(c => c.org || c.title).length;
       zoneMsg(zone, "drop-contacts-txt", true,
-        "🌱 <b>" + state.contacts.length + " people found!</b> " +
-        withJ + " with jobs · " + withB + " with birthdays");
-      setTimeout(() => go(2), 1600);
+        "<b>" + state.contacts.length + " people found</b> — " +
+        withJ + " with jobs, " + withB + " with birthdays");
+      setTimeout(() => go(2), 2200);
     });
   });
 
@@ -654,7 +658,7 @@
       const hi = rows.findIndex(r => r.join(",").toLowerCase().includes("first name"));
       if (hi === -1) {
         zoneMsg(zone, "drop-linkedin-txt", false,
-          "that doesn't look like Connections.csv — it's inside the LinkedIn zip under /Connections");
+          "That doesn't look like Connections.csv. It's inside the LinkedIn zip, under /Connections.");
         return;
       }
       const objs = toObjects(rows, hi);
@@ -665,8 +669,8 @@
           company: get("company"), position: get("position") };
       }).filter(c => c.name);
       zoneMsg(zone, "drop-linkedin-txt", true,
-        "💼 <b>" + state.linkedin.length + " connections!</b> jobs &amp; companies locked in");
-      setTimeout(() => go(2), 1600);
+        "<b>" + state.linkedin.length + " connections</b> — jobs and companies locked in");
+      setTimeout(() => go(2), 2200);
     });
   });
 
@@ -678,11 +682,11 @@
         if (!Array.isArray(people) || !people.length) throw new Error("empty");
         state.messages = people.filter(p => p.name || p.handle);
         zoneMsg(zone, "drop-messages-txt", true,
-          "💬 <b>" + state.messages.length + " texting friendships!</b> your closest people just grew tall");
-        setTimeout(() => go(2), 1600);
+          "<b>" + state.messages.length + " texting relationships</b> — your closest people just grew tall");
+        setTimeout(() => go(2), 2200);
       } catch (e) {
         zoneMsg(zone, "drop-messages-txt", false,
-          "couldn't read that JSON — make sure it's the file the helper created");
+          "Couldn't read that file. Make sure it's the friend-forest-messages.json the helper created.");
       }
     });
   });
@@ -728,14 +732,15 @@
       const p = parseWhatsApp(file.name, text);
       if (!p) {
         zoneMsg(zone, "drop-whatsapp-txt", false,
-          "couldn't read " + esc2(file.name) + " — is it a WhatsApp \"Export chat\" .txt?");
+          "Couldn't read " + esc2(file.name) + ". Is it a WhatsApp \"Export chat\" .txt?");
         return;
       }
       const existing = state.whatsapp.find(w => w.name === p.name);
       if (existing) Object.assign(existing, p); else state.whatsapp.push(p);
       zoneMsg(zone, "drop-whatsapp-txt", true,
-        "🟢 <b>" + state.whatsapp.length + " chats in!</b> latest: " + esc2(p.name) +
-        " (" + p.messages + " messages) — drop more or head back");
+        "<b>" + state.whatsapp.length + " chat" + (state.whatsapp.length > 1 ? "s" : "") +
+        " in</b> — latest: " + esc2(p.name) + " (" + p.messages +
+        " messages). Drop more, or head back.");
     });
   });
   function esc2(s) { return (s || "").replace(/[&<>"]/g, c =>
@@ -744,7 +749,7 @@
   document.getElementById("copy-script").addEventListener("click", () => {
     navigator.clipboard.writeText(document.getElementById("mac-script").textContent)
       .then(() => { const b = document.getElementById("copy-script");
-        b.textContent = "✓ copied"; setTimeout(() => b.textContent = "📋 copy command", 1600); });
+        b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy command", 1600); });
   });
 
   /* ---------- merge + grow ---------- */
@@ -882,9 +887,11 @@
       try { await enrichPerson(p); } catch (e) { if (++failed >= 3) break; }
       onProgress(++done, targets.length);
     }
+    return failed;
     data.tag_counts = {};
     data.people.forEach(p => p.tags.forEach(t =>
       data.tag_counts[t] = (data.tag_counts[t] || 0) + 1));
+    return failed;
   }
   function renderStats() {
     const people = mergePeople();
@@ -897,14 +904,14 @@
       '<div class="stat"><b>' + jobs + '</b><span>jobs known</span></div>' +
       '<div class="stat"><b>' + bdays + '</b><span>birthdays</span></div>';
     document.getElementById("final-title").textContent = people.length
-      ? "🌱 " + (state.name ? state.name.split(" ")[0] + ", your" : "Your") + " forest is ready."
-      : "🌱 Plant a starter grove";
+      ? (state.name ? state.name.split(" ")[0] + ", your" : "Your") + " forest is ready."
+      : "Nothing planted yet";
     document.getElementById("final-lead").textContent = people.length
       ? "Here's what your forest will grow from:"
-      : "No files yet — explore a sample forest and pour your data in later.";
+      : "Go back and add at least one source — or explore the demo forest and come back later.";
     document.getElementById("grow-note").textContent = state.ai
-      ? "✨ Claude will write bios and villager voices as your forest grows."
-      : "Tip: you can re-run any step later — forests love compost.";
+      ? "Claude will write short profiles while your forest grows."
+      : "You can re-run any step later. Forests love compost.";
   }
   document.getElementById("grow").addEventListener("click", async () => {
     const btn = document.getElementById("grow");
@@ -913,22 +920,51 @@
     btn.disabled = true;
     const data = toForestData(merged);
     if (state.ai && state.key) {
-      btn.textContent = "✨ Claude is writing profiles…";
-      await enrichForest(data, (done, total) => {
-        btn.textContent = "✨ writing profiles… " + done + " / " + total;
+      btn.textContent = "Writing profiles…";
+      const fails = await enrichForest(data, (done, total) => {
+        btn.textContent = "Writing profiles… " + done + " of " + total;
       });
+      if (fails) document.getElementById("grow-note").textContent =
+        fails + " profile" + (fails > 1 ? "s" : "") +
+        " couldn't be written (API errors) — your forest grows anyway.";
     }
     try {
       localStorage.setItem("ff-data", JSON.stringify(data));
     } catch (e) {
       alert("Couldn't save to this browser (storage full or blocked): " + e.message);
-      btn.disabled = false; btn.textContent = "🌳 Grow my forest"; return;
+      btn.disabled = false; btn.textContent = "Grow my forest"; return;
     }
-    btn.textContent = "🌳 forest planted!";
+    try { localStorage.removeItem("ff-draft"); } catch (e) {}
+    btn.textContent = "Forest planted — opening it now";
     window.location.href = "forest.html";
   });
 
   renderProgress();
+
+  /* welcome back: restore a saved draft */
+  try {
+    const d = JSON.parse(localStorage.getItem("ff-draft") || "null");
+    if (d && d.step > 0) {
+      Object.assign(state, {
+        name: d.name || "", city: d.city || "", contacts: d.contacts || [],
+        linkedin: d.linkedin || [], messages: d.messages || [],
+        whatsapp: d.whatsapp || [], manual: d.manual || [] });
+      document.getElementById("f-name").value = state.name;
+      document.getElementById("f-city").value = state.city;
+      renderManual();
+      go(d.step);
+      const zone = document.getElementById("progress-zone");
+      const note = document.createElement("div");
+      note.className = "resume-note";
+      note.innerHTML = '<span>Welcome back — picked up where you left off.</span>' +
+        '<button type="button" id="draft-reset">Start over</button>';
+      zone.after(note);
+      document.getElementById("draft-reset").addEventListener("click", () => {
+        localStorage.removeItem("ff-draft"); location.reload();
+      });
+      setTimeout(() => note.remove(), 12000);
+    }
+  } catch (e) {}
 })();
 </script>
 
@@ -938,16 +974,6 @@
   "use strict";
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- design A/B toggle ---------- */
-  const tog = document.getElementById("design-toggle");
-  function setDesign(cozy) {
-    document.body.classList.toggle("cozy", cozy);
-    tog.textContent = cozy ? "✦ design: cozy" : "✦ design: modern";
-    try { localStorage.setItem("friendship-design", cozy ? "cozy" : "modern"); } catch (e) {}
-  }
-  tog.addEventListener("click", () =>
-    setDesign(!document.body.classList.contains("cozy")));
-  try { setDesign(localStorage.getItem("friendship-design") === "cozy"); } catch (e) {}
 
   /* ---------- shared pixel primitives ---------- */
   const G = { grass: "#8fca6a", grassD: "#6fae4e", grassL: "#a6d97f",
@@ -1242,85 +1268,7 @@
     },
   };
   const STEP_SCENE = { 0: "stroll", 1: "wave", 2: "stroll", 3: "plant", 4: "chat",
-    5: "flutter", 6: "chat", 7: "magic", 8: "fish" };
-
-  /* ---------- cozy mode floating tiles ---------- */
-  const tiles = [];
-  [["sc1", (k2, c2, w, h2, t) => { // watering a thirsty tree back to green
-      const revived = (t % 5000) / 5000 > 0.55;
-      k2.tree(100, 145, 7, t, 2, revived ? null
-        : { c: "#c98a4a", l: "#e0a55e", d: "#a06a34" });
-      k2.person(42, 158, t, {});
-      c2.fillStyle = "#9aa3a8"; c2.fillRect(56, 122, 10, 7); c2.fillRect(66, 120, 4, 4);
-      if ((t % 5000) / 5000 > 0.2 && (t % 5000) / 5000 < 0.75) {
-        const r = mkRng((t / 90) | 0); c2.fillStyle = G.water;
-        for (let i = 0; i < 5; i++) c2.fillRect(70 + r() * 16, 126 + r() * 18, 2.2, 3);
-      }
-      if (revived) { const r = mkRng((t / 130) | 0); c2.fillStyle = G.gold;
-        for (let i = 0; i < 4; i++) c2.fillRect(80 + r() * 42, 80 + r() * 34, 2.5, 2.5); }
-    }],
-   ["sc2", (k2, c2, w, h2, t) => { // catching up with a friend
-      k2.tree(150, 112, 4, t, 1);
-      k2.person(58, 118, t, {});
-      k2.person(112, 118, t, { flip: true, shirt: "#7d5fb0", hat: "#3a2c1c",
-        hatD: "#1c1c1c", skin: "#a86a3f" });
-      const ph = ((t / 1500) | 0) % 2;
-      k2.bubble(c2, ph ? 112 : 58, 118 - 16 * 2.6 - 8, ph ? "miss u!!" : "omg HI");
-      if (Math.sin(t / 400) > 0.6) { c2.fillStyle = G.rose;
-        c2.font = "700 11px serif"; c2.textAlign = "center"; c2.fillText("♥", 85, 52); }
-    }],
-   ["sc3", (k2, c2, w, h2, t) => { // fishing the river
-      c2.fillStyle = "#2a86b5"; c2.fillRect(0, 88, w, 26);
-      c2.fillStyle = G.water; c2.fillRect(0, 90, w, 22);
-      c2.globalAlpha = 0.4; c2.fillStyle = "#fff";
-      for (let i = 0; i < 5; i++) c2.fillRect((i * 37 + t * 0.02) % w, 95 + (i % 3) * 6, 5, 1.5);
-      c2.globalAlpha = 1;
-      k2.tree(134, 66, 4, t, 3);
-      k2.person(38, 142, t, {});
-      c2.strokeStyle = "#e8e4d8"; c2.lineWidth = 0.8;
-      c2.beginPath(); c2.moveTo(50, 112); c2.quadraticCurveTo(74, 88, 92, 100); c2.stroke();
-      const bite = Math.sin(t / 1200) > 0.72;
-      c2.fillStyle = "#e05252";
-      c2.beginPath(); c2.arc(92, 100 + (bite ? Math.sin(t / 60) * 2.5 : Math.sin(t / 500)), 3, 0, 7); c2.fill();
-      if (bite) { c2.fillStyle = G.gold; c2.font = "800 13px sans-serif";
-        c2.textAlign = "center"; c2.fillText("!", 92, 84); }
-    }],
-   ["sc4", (k2, c2, w, h2, t) => { // foraging finds
-      k2.tree(120, 70, 4, t, 4);
-      const spots = [[30, 100], [78, 118], [118, 128]];
-      const k = ((t / 1600) | 0) % (spots.length + 1);
-      spots.forEach(([sx, sy], i) => {
-        if (i >= k) {
-          if (i === 0) { k2.px(sx - 1, sy - 4, 2.4, 4, "#f2ede4");
-            k2.px(sx - 3.5, sy - 7, 7, 3.5, "#e05252"); }
-          else if (i === 1) { c2.fillStyle = "#5a6ec9";
-            c2.beginPath(); c2.arc(sx, sy - 3, 2.2, 0, 7); c2.fill();
-            c2.beginPath(); c2.arc(sx + 4, sy - 1, 2.2, 0, 7); c2.fill(); }
-          else { k2.px(sx - 0.7, sy - 4, 1.4, 4, "#3f8f52");
-            k2.px(sx - 2, sy - 7, 4, 3, "#f3b0cd"); }
-        }
-      });
-      const tgt = spots[Math.min(k, spots.length - 1)];
-      k2.person(tgt[0], tgt[1] + 14, t, { walking: k < spots.length, scale: 2.2 });
-      if (k > 0) { const last = spots[k - 1]; const r = mkRng((t / 120) | 0);
-        c2.fillStyle = G.gold;
-        for (let i = 0; i < 3; i++) c2.fillRect(last[0] - 7 + r() * 14, last[1] - 12 + r() * 9, 2.3, 2.3); }
-      c2.fillStyle = "rgba(255,255,255,0.92)";
-      if (c2.roundRect) { c2.beginPath(); c2.roundRect(w / 2 - 26, 8, 52, 19, 9); c2.fill(); }
-      else c2.fillRect(w / 2 - 26, 8, 52, 19);
-      c2.fillStyle = G.ink; c2.font = "800 11px sans-serif"; c2.textAlign = "center";
-      c2.fillText("🧺 " + k + "/3", w / 2, 21);
-    }],
-  ].forEach(([id, fn]) => {
-    const el = document.getElementById(id);
-    if (el) tiles.push({ c: el.getContext("2d"), w: el.width, h: el.height, fn,
-      kit: makeKit(el.getContext("2d")) });
-  });
-  function tileGround(c2, w, h2) {
-    const g = c2.createLinearGradient(0, 0, 0, h2);
-    g.addColorStop(0, G.grass); g.addColorStop(1, G.grassD);
-    c2.fillStyle = g; c2.fillRect(0, 0, w, h2);
-  }
+    5: "flutter", 6: "chat", 7: "magic", 8: "fish", 9: "plant", 10: "chat" };
 
   function loop(t) {
     if (c) {
@@ -1328,11 +1276,6 @@
       const on = document.querySelector(".step.on");
       const sceneKey = STEP_SCENE[on ? +on.dataset.step : 0] || "stroll";
       SCENES[sceneKey](t);
-    }
-    if (document.body.classList.contains("cozy")) {
-      tiles.forEach(tl => { tl.c.clearRect(0, 0, tl.w, tl.h);
-        tl.c.imageSmoothingEnabled = false;
-        tileGround(tl.c, tl.w, tl.h); tl.fn(tl.kit, tl.c, tl.w, tl.h, t); });
     }
     requestAnimationFrame(loop);
   }
