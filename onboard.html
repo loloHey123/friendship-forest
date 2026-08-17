@@ -1,5 +1,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#182014">
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 <title>Friend Forest — grow your friend forest</title>
 <style>
   :root {
@@ -285,6 +289,9 @@
       <button class="card" data-goto="6"><span class="badge">✓</span><span class="go" id="hub-m">open →</span>
         <h3>💬 Messages <span class="tag mac">Mac only · the good stuff</span></h3>
         <p>Your actual texting history — what makes trees feel <em>alive</em>.</p></button>
+      <button class="card" data-goto="10"><span class="badge">✓</span><span class="go" id="hub-w">open →</span>
+        <h3>🟢 WhatsApp <span class="tag fast">a few minutes</span></h3>
+        <p>Export your favorite chats as .txt — texting history for the rest of the world.</p></button>
       <button class="card" data-goto="9"><span class="badge">✓</span><span class="go" id="hub-h">open →</span>
         <h3>✍️ By hand <span class="tag fast">always works</span></h3>
         <p>No exports needed — type in friends one at a time, starting with your favorites.</p></button>
@@ -300,14 +307,13 @@
   <section class="step" data-step="3">
     <h2>📇 Export your contacts</h2>
     <ol class="howto">
-      <li>Open <b>contacts.google.com</b> (or Apple Contacts → File → Export)</li>
-      <li>Select all → <b>Export</b></li>
-      <li>Pick <b>Google CSV</b> format</li>
-      <li>Drop the file below 👇</li>
+      <li><b>Google:</b> contacts.google.com → select all → Export → Google CSV</li>
+      <li><b>Apple:</b> Contacts app → select all → File → Export → Export vCard</li>
+      <li>Drop the file below 👇 (both .csv and .vcf work)</li>
     </ol>
     <label class="drop" id="drop-contacts">
-      <span class="big">📇</span><span id="drop-contacts-txt">drop <b>contacts.csv</b> here — or click to browse</span>
-      <input type="file" accept=".csv,text/csv">
+      <span class="big">📇</span><span id="drop-contacts-txt">drop <b>contacts.csv</b> or <b>.vcf</b> here — or click to browse</span>
+      <input type="file" accept=".csv,.vcf,text/csv,text/vcard">
     </label>
     <div class="grow-space"></div>
     <div class="btnrow">
@@ -401,6 +407,25 @@
     </div>
   </section>
 
+  <!-- STEP 10 · whatsapp -->
+  <section class="step" data-step="10">
+    <h2>🟢 Export WhatsApp<br>chats</h2>
+    <ol class="howto">
+      <li>Open a chat → tap the name → <b>Export chat</b> → <b>Without media</b></li>
+      <li>Save / AirDrop the <b>.txt</b> to this device (unzip if needed)</li>
+      <li>Repeat for your favorite people, then drop them all below 👇</li>
+    </ol>
+    <label class="drop" id="drop-whatsapp">
+      <span class="big">🟢</span><span id="drop-whatsapp-txt">drop <b>WhatsApp Chat with ….txt</b> files here (several at once is fine)</span>
+      <input type="file" accept=".txt,text/plain" multiple>
+    </label>
+    <p class="hint">Only message counts and dates are used — never the messages themselves.</p>
+    <div class="grow-space"></div>
+    <div class="btnrow">
+      <button class="btn primary" data-goto="2">Back to sources</button>
+    </div>
+  </section>
+
   <!-- STEP 7 · AI -->
   <section class="step" data-step="7">
     <h2>🤖 Let Claude write<br>the field guide</h2>
@@ -442,7 +467,7 @@
 (function () {
   "use strict";
   const state = { name: "", city: "", contacts: [], linkedin: [], messages: [],
-    manual: [], ai: false, key: "" };
+    whatsapp: [], manual: [], ai: false, key: "" };
   let step = 0;
   const TOTAL = 8; // steps 1..8 shown in the dash meter
 
@@ -458,7 +483,7 @@
     document.getElementById("steplabel").textContent = Math.min(step, TOTAL) + " of " + TOTAL;
   }
   function go(n) {
-    step = Math.max(0, Math.min(9, n));
+    step = Math.max(0, Math.min(10, n));
     document.querySelectorAll(".step").forEach(s =>
       s.classList.toggle("on", +s.dataset.step === step));
     renderProgress();
@@ -493,6 +518,7 @@
     mark("hub-c", state.contacts.length);
     mark("hub-l", state.linkedin.length);
     mark("hub-m", state.messages.length);
+    mark("hub-w", state.whatsapp.length);
     mark("hub-h", state.manual.length);
   }
 
@@ -545,16 +571,55 @@
     zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("over"));
     zone.addEventListener("drop", e => { e.preventDefault(); zone.classList.remove("over");
-      if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0], zone); });
-    input.addEventListener("change", () => { if (input.files[0]) onFile(input.files[0], zone); });
+      [...e.dataTransfer.files].forEach(f => onFile(f, zone)); });
+    input.addEventListener("change", () => { [...input.files].forEach(f => onFile(f, zone)); });
   }
   function zoneMsg(zone, txtId, ok, msg) {
     zone.classList.toggle("ok", ok); zone.classList.toggle("err", !ok);
     document.getElementById(txtId).innerHTML = msg;
   }
 
+  /* vCard (.vcf) — Apple Contacts' default export format */
+  function parseVCF(text) {
+    const unfolded = text.replace(/\r?\n[ \t]/g, "");
+    return unfolded.split(/BEGIN:VCARD/i).slice(1).map(card => {
+      const get = re => { const m = card.match(re); return m ? m[1].trim() : ""; };
+      let name = get(/^FN(?:;[^:]*)?:(.+)$/mi);
+      if (!name) {
+        const n = get(/^N(?:;[^:]*)?:(.+)$/mi).split(";");
+        name = [n[1], n[0]].filter(Boolean).join(" ").trim();
+      }
+      const bday = get(/^BDAY(?:;[^:]*)?:(.+)$/mi)
+        .replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
+      return {
+        name,
+        org: get(/^ORG(?:;[^:]*)?:([^;\r\n]+)/mi),
+        title: get(/^TITLE(?:;[^:]*)?:(.+)$/mi),
+        birthday: bday,
+        phone: get(/^(?:ITEM\d+\.)?TEL(?:;[^:]*)?:(.+)$/mi),
+        email: get(/^(?:ITEM\d+\.)?EMAIL(?:;[^:]*)?:(.+)$/mi),
+        notes: get(/^NOTE(?:;[^:]*)?:(.+)$/mi).replace(/\\n/g, " ").replace(/\\,/g, ","),
+      };
+    }).filter(c => c.name && (c.phone || c.email));
+  }
+
   wireDrop("drop-contacts", (file, zone) => {
     file.text().then(text => {
+      if (/\.vcf$/i.test(file.name) || /^BEGIN:VCARD/im.test(text)) {
+        state.contacts = parseVCF(text);
+        if (!state.contacts.length) {
+          zoneMsg(zone, "drop-contacts-txt", false,
+            "no contacts found in that vCard — try re-exporting?");
+          return;
+        }
+        const withB = state.contacts.filter(c => c.birthday).length;
+        const withJ = state.contacts.filter(c => c.org || c.title).length;
+        zoneMsg(zone, "drop-contacts-txt", true,
+          "🌱 <b>" + state.contacts.length + " people found!</b> " +
+          withJ + " with jobs · " + withB + " with birthdays");
+        setTimeout(() => go(2), 1600);
+        return;
+      }
       const rows = parseCSV(text);
       const head = rows[0] ? rows[0].join(",").toLowerCase() : "";
       if (!/first name|given name/.test(head)) {
@@ -622,6 +687,60 @@
     });
   });
 
+  /* WhatsApp "Export chat" .txt — counts + dates only, content ignored */
+  function parseWhatsApp(filename, text) {
+    // Android: "12/31/23, 9:15 PM - Name: msg"   iOS: "[31/12/2023, 21:15:42] Name: msg"
+    const line = /^\[?(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4}),?\s+\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s*[AP]M)?\]?\s*(?:-\s*)?([^:]{1,60}):\s/;
+    let count = 0, first = null, last = null;
+    const senders = {};
+    let dayFirst = false;   // detect d/m vs m/d: any first-number > 12 means day-first
+    const rows = [];
+    for (const l of text.split("\n")) {
+      const m = l.match(line);
+      if (!m) continue;
+      rows.push(m);
+      if (+m[1] > 12) dayFirst = true;
+      const sender = m[4].trim();
+      if (!/(joined|left|added|removed|changed|created|Messages and calls)/i.test(sender))
+        senders[sender] = (senders[sender] || 0) + 1;
+    }
+    for (const m of rows) {
+      count++;
+      let a = +m[1], b = +m[2], y = +m[3];
+      if (y < 100) y += 2000;
+      const mo = dayFirst ? b : a, dd = dayFirst ? a : b;
+      const d = y + "-" + String(mo).padStart(2, "0") + "-" + String(dd).padStart(2, "0");
+      if (!first || d < first) first = d;
+      if (!last || d > last) last = d;
+    }
+    if (!count) return null;
+    // friend's name: filename "WhatsApp Chat with X", else busiest sender that isn't you
+    let name = (filename.match(/chat with (.+?)\.txt$/i) || [])[1];
+    if (!name) {
+      const selfN = (state.name || "").toLowerCase();
+      name = Object.entries(senders).sort((x, z) => z[1] - x[1])
+        .map(([s]) => s).find(s => s.toLowerCase() !== selfN) || "";
+    }
+    return name ? { name, messages: count, first, last } : null;
+  }
+  wireDrop("drop-whatsapp", (file, zone) => {
+    file.text().then(text => {
+      const p = parseWhatsApp(file.name, text);
+      if (!p) {
+        zoneMsg(zone, "drop-whatsapp-txt", false,
+          "couldn't read " + esc2(file.name) + " — is it a WhatsApp \"Export chat\" .txt?");
+        return;
+      }
+      const existing = state.whatsapp.find(w => w.name === p.name);
+      if (existing) Object.assign(existing, p); else state.whatsapp.push(p);
+      zoneMsg(zone, "drop-whatsapp-txt", true,
+        "🟢 <b>" + state.whatsapp.length + " chats in!</b> latest: " + esc2(p.name) +
+        " (" + p.messages + " messages) — drop more or head back");
+    });
+  });
+  function esc2(s) { return (s || "").replace(/[&<>"]/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
   document.getElementById("copy-script").addEventListener("click", () => {
     navigator.clipboard.writeText(document.getElementById("mac-script").textContent)
       .then(() => { const b = document.getElementById("copy-script");
@@ -647,6 +766,16 @@
       position: c.position, _src: "linkedin" }));
     state.messages.forEach(m => upsert(m.name || m.handle, { messages: m.messages || 0,
       first: m.first, last: m.last, _src: "messages" }));
+    state.whatsapp.forEach(m => {   // adds onto iMessage counts rather than replacing
+      const k = norm(m.name);
+      if (!k || (selfN && k === selfN)) return;
+      if (!byKey.has(k)) byKey.set(k, { name: m.name, sources: [] });
+      const e = byKey.get(k);
+      e.messages = (e.messages || 0) + m.messages;
+      if (m.first && (!e.first || m.first < e.first)) e.first = m.first;
+      if (m.last && (!e.last || m.last > e.last)) e.last = m.last;
+      if (!e.sources.includes("whatsapp")) e.sources.push("whatsapp");
+    });
     state.manual.forEach(m => upsert(m.name, { group: m.group, manualCity: m.city,
       notes: m.note, _src: "manual" }));
     return [...byKey.values()];

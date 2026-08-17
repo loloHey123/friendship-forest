@@ -1,4 +1,7 @@
 <meta charset="utf-8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#182014">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <style>
   :root {
@@ -464,6 +467,8 @@
         <button id="set-sound" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M16 9l5 5M21 9l-5 5"/></svg> Sound</button>
         <button id="set-style"><svg class="bi" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Customize character</button>
         <button id="set-key"><svg class="bi" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Claude API key</button>
+        <button id="set-notify" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg> Birthday alerts</button>
+        <button id="set-sync"><svg class="bi" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg> Sync via GitHub Gist</button>
         <button id="set-export"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export forest data</button>
         <button id="set-import"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Import forest data</button>
       </div>
@@ -4545,6 +4550,97 @@
         '<button class="fchip" data-revive="' + esc(g.slug) + '">🌱 revive</button></div>';
     }).join("");
   }
+  /* ---- PWA: offline shell + opt-in birthday alerts on open ---- */
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  const notifyBtn = document.getElementById("set-notify");
+  notifyBtn.setAttribute("aria-pressed", String(!!localStorage.getItem("ff-notify")));
+  notifyBtn.addEventListener("click", () => {
+    if (localStorage.getItem("ff-notify")) {
+      localStorage.removeItem("ff-notify");
+      notifyBtn.setAttribute("aria-pressed", "false");
+      toast("birthday alerts off");
+      return;
+    }
+    if (!("Notification" in window)) { toast("this browser can't do notifications"); return; }
+    Notification.requestPermission().then(perm => {
+      if (perm !== "granted") { toast("notifications blocked by the browser"); return; }
+      localStorage.setItem("ff-notify", "1");
+      notifyBtn.setAttribute("aria-pressed", "true");
+      toast("you'll get a nudge when you open the forest");
+      forestNudge(true);
+    });
+  });
+  function forestNudge(force) {
+    // fires at most once a day, when the forest is opened (no server = no push)
+    if (!localStorage.getItem("ff-notify") || Notification.permission !== "granted") return;
+    const today = todayStr();
+    if (!force && localStorage.getItem("ff-notified") === today) return;
+    const bd = PEOPLE.filter(p => p._bdayDays != null && p._bdayDays <= 3)
+      .map(p => firstName(p) + (p._bdayDays === 0 ? " — TODAY!" : " in " + p._bdayDays + "d"));
+    const quiet = PEOPLE.filter(p => p.reconnect === "priority").length;
+    const bits = [];
+    if (bd.length) bits.push("Birthdays: " + bd.join(", "));
+    if (quiet) bits.push(quiet + " close friend" + (quiet > 1 ? "s" : "") + " could use watering");
+    if (!bits.length) return;
+    localStorage.setItem("ff-notified", today);
+    try { new Notification("Friend Forest", { body: bits.join("\n"), icon: "icons/icon-192.png" }); }
+    catch (e) {}
+  }
+  setTimeout(() => forestNudge(false), 2500);
+
+  /* ---- cross-device sync via a secret GitHub Gist (user's own token) ---- */
+  async function gistConfig() {
+    let token = localStorage.getItem("ff-gist-token");
+    if (!token) {
+      token = window.prompt(
+        "GitHub token with the 'gist' scope (github.com/settings/tokens — stored only in this browser):");
+      if (!token) return null;
+      localStorage.setItem("ff-gist-token", token.trim());
+    }
+    return localStorage.getItem("ff-gist-token");
+  }
+  async function gistSync() {
+    const token = await gistConfig(); if (!token) return;
+    const headers = { authorization: "Bearer " + token,
+      accept: "application/vnd.github+json", "content-type": "application/json" };
+    const id = localStorage.getItem("ff-gist-id");
+    const choice = window.prompt(
+      "Sync: type PUSH to upload this forest" + (id ? ", PULL to download the synced one" : "") +
+      ", or paste a gist id from another device:", "PUSH");
+    if (!choice) return;
+    try {
+      if (/^push$/i.test(choice)) {
+        const body = { description: "Friend Forest data (private)", public: false,
+          files: { "friend-forest.json": { content: JSON.stringify(exportForest(), null, 1) } } };
+        const res = await fetch("https://api.github.com/gists" + (id ? "/" + id : ""),
+          { method: id ? "PATCH" : "POST", headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error("GitHub " + res.status);
+        const j = await res.json();
+        localStorage.setItem("ff-gist-id", j.id);
+        window.prompt("Forest pushed! On another device, choose Sync and paste this gist id:", j.id);
+      } else {
+        const useId = /^pull$/i.test(choice) ? id : choice.trim();
+        if (!useId) { toast("no gist id yet — PUSH from the device that has your forest"); return; }
+        const res = await fetch("https://api.github.com/gists/" + useId, { headers });
+        if (!res.ok) throw new Error("GitHub " + res.status);
+        const j = await res.json();
+        const file = j.files && j.files["friend-forest.json"];
+        if (!file) throw new Error("that gist has no friend-forest.json");
+        const data = JSON.parse(file.content);
+        if (!Array.isArray(data.people)) throw new Error("not a forest file");
+        if (!window.confirm("Replace this browser's forest with " + data.people.length +
+          " people from the synced gist?")) return;
+        localStorage.setItem("ff-gist-id", useId);
+        localStorage.setItem("ff-data", JSON.stringify(data));
+        location.reload();
+      }
+    } catch (e) {
+      if (String(e).includes("401")) localStorage.removeItem("ff-gist-token");
+      toast("sync failed: " + e.message);
+    }
+  }
+  document.getElementById("set-sync").addEventListener("click", gistSync);
+
   /* ---- settings: Claude key, export, import ---- */
   document.getElementById("set-key").addEventListener("click", () => {
     const cur = localStorage.getItem("ff-key") || "";
@@ -4848,9 +4944,19 @@
   function exportForest() {
     const tag_counts = {};
     PEOPLE.forEach(p => (p.tags || []).forEach(t => tag_counts[t] = (tag_counts[t] || 0) + 1));
+    // friendship ties: recomputed from mutual_friends names (demo keeps its baked edges)
+    let edges = DATA.edges || [];
+    if (!DEMO_MODE) {
+      const idx = new Map(PEOPLE.map((q, i) => [q.name.toLowerCase(), i]));
+      const eset = new Set();
+      PEOPLE.forEach((q, i) => (q.mutual_friends || []).forEach(n => {
+        const j = idx.get((n || "").toLowerCase());
+        if (j !== undefined && j !== i) eset.add(Math.min(i, j) + "," + Math.max(i, j));
+      }));
+      edges = [...eset].map(s => s.split(",").map(Number));
+    }
     return { gardener: DATA.gardener || null, generated: DATA.generated || null,
-      people: PEOPLE.map(cleanPerson), tag_counts, total: PEOPLE.length,
-      edges: DATA.edges || [] };
+      people: PEOPLE.map(cleanPerson), tag_counts, total: PEOPLE.length, edges };
   }
   function saveForest() {
     if (DEMO_MODE) return false;
@@ -4873,12 +4979,39 @@
       '<label for="ed-grove">Grove</label><select id="ed-grove">' +
         ["friends", "family", "partner"].map(g => '<option value="' + g + '"' +
           (p.grove === g ? " selected" : "") + '>' + g + '</option>').join("") + '</select>' +
+      '<label for="ed-knows">Knows (their ties in the forest — draws the web lines)</label>' +
+      '<div class="p-links" id="ed-knows-chips"></div>' +
+      '<input id="ed-knows" list="ed-knows-list" placeholder="type a friend\'s name, press enter">' +
+      '<datalist id="ed-knows-list">' + PEOPLE.filter(q => q !== p)
+        .map(q => '<option value="' + esc(q.name) + '">').join("") + '</datalist>' +
       '<label for="ed-intro">About them</label>' +
       '<textarea id="ed-intro" rows="4">' + esc(p.intro || "") + '</textarea>' +
       '<label for="ed-notes">Notes</label>' +
       '<textarea id="ed-notes" rows="4">' + esc(notesSec ? notesSec.body.replace(/^-\s*/, "") : "") + '</textarea>' +
       '<div class="p-acts"><button class="fchip" id="ed-save">save</button>' +
       '<button class="fchip" id="ed-cancel">cancel</button></div></div>';
+    // knows-X picker: chips + datalist of everyone else in the forest
+    const knows = [...(p.mutual_friends || [])];
+    const knowsInput = document.getElementById("ed-knows");
+    const chipsBox = document.getElementById("ed-knows-chips");
+    function drawKnows() {
+      chipsBox.innerHTML = knows.map(n =>
+        '<button type="button" class="p-link" data-unknow="' + esc(n) + '">' +
+        esc(n) + ' ✕</button>').join("") || '<span style="opacity:.5">no ties yet</span>';
+      chipsBox.querySelectorAll("[data-unknow]").forEach(b => b.addEventListener("click", () => {
+        knows.splice(knows.indexOf(b.dataset.unknow), 1); drawKnows();
+      }));
+    }
+    function addKnown() {
+      const v = knowsInput.value.trim();
+      const q = PEOPLE.find(x => x !== p && x.name.toLowerCase() === v.toLowerCase());
+      if (!q) return;
+      if (!knows.some(n => n.toLowerCase() === v.toLowerCase())) { knows.push(q.name); drawKnows(); }
+      knowsInput.value = "";
+    }
+    knowsInput.addEventListener("change", addKnown);
+    knowsInput.addEventListener("keydown", e => { if (e.key === "Enter") addKnown(); });
+    drawKnows();
     document.getElementById("ed-cancel").addEventListener("click", () => openPanel(p));
     document.getElementById("ed-save").addEventListener("click", () => {
       const v = id => document.getElementById(id).value.trim();
@@ -4892,6 +5025,18 @@
       p.intro = v("ed-intro");
       p.sections = (p.sections || []).filter(s => !/^notes/i.test(s.title));
       if (v("ed-notes")) p.sections.push({ title: "Notes", body: "- " + v("ed-notes") });
+      // ties are symmetric: keep the other side's list in step
+      const before = p.mutual_friends || [];
+      before.filter(n => !knows.includes(n)).forEach(n => {
+        const q = PEOPLE.find(x => x.name === n);
+        if (q) q.mutual_friends = (q.mutual_friends || []).filter(x => x !== p.name);
+      });
+      knows.forEach(n => {
+        const q = PEOPLE.find(x => x.name === n);
+        if (q && !(q.mutual_friends || []).includes(p.name))
+          (q.mutual_friends = q.mutual_friends || []).push(p.name);
+      });
+      p.mutual_friends = knows;
       if (saveForest()) {   // tags/grove reshape the forest — reload keeps everything consistent
         location.hash = "#p=" + encodeURIComponent(p.slug);
         location.reload();

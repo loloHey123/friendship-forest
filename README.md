@@ -26,9 +26,10 @@ The onboarding (`onboard.html`) accepts any mix of:
 | Source | How | What it adds |
 |---|---|---|
 | ✍️ By hand | type friends in one at a time | names, groups, cities, notes |
-| 📇 Contacts CSV | Google Contacts / Apple Contacts export | names, jobs, birthdays |
+| 📇 Contacts | Google CSV **or** Apple vCard (.vcf) export | names, jobs, birthdays |
 | 💼 LinkedIn | `Connections.csv` from your data export | companies, positions |
 | 💬 Messages (Mac) | `python3 helper/extract_messages.py` | who you actually talk to — message counts and dates only, never content |
+| 🟢 WhatsApp | per-chat "Export chat" .txt files | message counts + dates for the rest of the world |
 | 🤖 Claude (optional) | paste **your own** Anthropic API key | short written profiles for your ~30 closest people |
 
 Groups and companies become groves; message volume becomes tree size; long
@@ -50,7 +51,13 @@ key — there is no middleman server. Skip it and everything still works.
 - **Filters** — group by circles, city, or hobbies; highlight friendship ties
 - Click any tree for their profile and timeline; add their pixel person to
   stroll the forest
+- **Ties** — the edit form's "knows" picker links friends together and draws
+  the friendship web in the ties view
 - **Export / import** — Settings menu; JSON backup, and the file the bot reads
+- **Installable (PWA)** — works offline; opt into *Birthday alerts* in Settings
+  for a nudge when you open the forest
+- **Sync** — Settings → *Sync via GitHub Gist* pushes/pulls your forest between
+  devices using your own GitHub token (secret gist, your account only)
 
 ## The pocket bot 🤖
 
