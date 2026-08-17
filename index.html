@@ -1,0 +1,10 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Friend Forest</title>
+<script>
+  // planted a forest already? go straight to it. otherwise, onboarding.
+  let has = false;
+  try { has = !!localStorage.getItem("ff-data"); } catch (e) {}
+  window.location.replace(has ? "forest.html" : "onboard.html");
+</script>
+<noscript>Friend Forest needs JavaScript. Open <a href="onboard.html">onboard.html</a>.</noscript>
