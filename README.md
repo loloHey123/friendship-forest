@@ -41,10 +41,35 @@ key — there is no middleman server. Skip it and everything still works.
 
 - **Search** — one bar that both finds friends by name and answers questions
   like "who do I know in climbing?" or "who should I reach out to?"
+- **Ask Claude** — connect your own Anthropic key (Settings → Claude API key)
+  and the search bar can answer anything about your friends, straight from
+  your browser to Anthropic
+- **Edit anyone** — every popover has *edit details* (city, tags, birthday,
+  notes…) and *log a moment* (adds to their timeline, waters the tree)
 - **Roam** — walk the forest as a farmer (WASD), water trees, talk to villagers
 - **Filters** — group by circles, city, or hobbies; highlight friendship ties
 - Click any tree for their profile and timeline; add their pixel person to
   stroll the forest
+- **Export / import** — Settings menu; JSON backup, and the file the bot reads
+
+## The pocket bot 🤖
+
+`bot/forest_bot.py` is a self-hosted Telegram bot (Python stdlib only) that:
+
+- sends a **morning forest report**: birthdays this week, close friends gone
+  quiet, and calendar events in the next 48h that mention a friend
+- answers **any question about your friends** via Claude, any time of day
+
+```bash
+# 1. make a bot with @BotFather, 2. export your forest from Settings, then:
+export TELEGRAM_BOT_TOKEN=123:abc
+export ANTHROPIC_API_KEY=sk-ant-...
+export ICS_URL="https://calendar.google.com/.../basic.ics"   # optional
+python3 bot/forest_bot.py ~/Downloads/friend-forest.json
+```
+
+Message it `/start` once and keep it running anywhere (tmux, systemd, a
+Raspberry Pi). `/digest` forces a report; anything else goes to Claude.
 
 ## Your data
 
@@ -60,6 +85,7 @@ index.html                  routes to your forest or the onboarding
 onboard.html                data import + optional Claude enrichment
 forest.html                 the forest itself (demo data baked in)
 helper/extract_messages.py  Mac iMessage summary helper (offline, counts only)
+bot/forest_bot.py           self-hosted Telegram bot (digests + Q&A)
 ```
 
 ## License

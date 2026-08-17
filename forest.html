@@ -225,6 +225,14 @@
   .p-badge.water { background: color-mix(in srgb, var(--water) 20%, var(--panel));
     color: var(--ink); border: 1px solid var(--water); }
   .p-walker { display: block; margin: 2px 0 10px; }
+  .p-acts { display: flex; gap: 6px; margin: 2px 0 10px; flex-wrap: wrap; }
+  .p-form label { display: block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft);
+    margin: 10px 0 3px; }
+  .p-form input, .p-form textarea, .p-form select { width: 100%; box-sizing: border-box;
+    font-family: var(--serif); font-size: 14px; color: var(--ink); background: var(--panel);
+    border: 1.5px solid var(--panel-line); border-radius: 5px; padding: 7px 9px; }
+  .p-form input:focus-visible, .p-form textarea:focus-visible { border-color: var(--accent); outline: none; }
   .p-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
   .p-link { font-family: var(--mono); font-size: 10.5px; cursor: pointer;
     padding: 4px 9px; border-radius: 20px; border: 1px solid var(--panel-line);
@@ -455,7 +463,11 @@
         <button id="set-grave"><svg class="bi" viewBox="0 0 24 24"><path d="M6 21V9a6 6 0 0 1 12 0v12M4 21h16M10 11h4"/></svg> Tree graveyard</button>
         <button id="set-sound" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M16 9l5 5M21 9l-5 5"/></svg> Sound</button>
         <button id="set-style"><svg class="bi" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Customize character</button>
+        <button id="set-key"><svg class="bi" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Claude API key</button>
+        <button id="set-export"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export forest data</button>
+        <button id="set-import"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Import forest data</button>
       </div>
+      <input type="file" id="import-file" accept=".json,application/json" style="display:none">
     </div>
   </div>
 
@@ -4533,6 +4545,37 @@
         '<button class="fchip" data-revive="' + esc(g.slug) + '">🌱 revive</button></div>';
     }).join("");
   }
+  /* ---- settings: Claude key, export, import ---- */
+  document.getElementById("set-key").addEventListener("click", () => {
+    const cur = localStorage.getItem("ff-key") || "";
+    const k = window.prompt(
+      "Anthropic API key for AI answers in search (stored only in this browser's localStorage — leave empty to clear):",
+      cur);
+    if (k === null) return;
+    if (k.trim()) { localStorage.setItem("ff-key", k.trim()); toast("Claude connected"); }
+    else { localStorage.removeItem("ff-key"); toast("Claude key cleared"); }
+  });
+  document.getElementById("set-export").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.download = "friend-forest.json";
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(exportForest(), null, 1)],
+      { type: "application/json" }));
+    a.click();
+    toast(DEMO_MODE ? "exported the demo forest" : "forest exported — feed it to the bot!");
+  });
+  document.getElementById("set-import").addEventListener("click", () =>
+    document.getElementById("import-file").click());
+  document.getElementById("import-file").addEventListener("change", e => {
+    const file = e.target.files[0]; if (!file) return;
+    file.text().then(text => {
+      const j = JSON.parse(text);
+      if (!Array.isArray(j.people) || !j.people.length) throw new Error("no people[] found");
+      if (!window.confirm("Replace this browser's forest with " + j.people.length +
+        " people from " + file.name + "?")) return;
+      localStorage.setItem("ff-data", JSON.stringify(j));
+      location.reload();
+    }).catch(err => toast("couldn't import: " + err.message));
+  });
   document.getElementById("set-grave").addEventListener("click", () => {
     const pn = document.getElementById("grave-panel");
     const open = !pn.classList.contains("show");
@@ -4794,6 +4837,91 @@
     }
     return ev.sort((a, b) => b.ts - a.ts || b.prec - a.prec);   // reverse chron: newest first
   }
+  /* ================= editing + persistence (open-source build) ================= */
+  const PERSON_FIELDS = ["volume", "handle", "slug", "name", "grove", "stage", "city",
+    "occupation", "reconnect", "first_contact", "last_interaction", "birthday", "hobbies",
+    "tags", "mutual_friends", "intro", "sections", "timeline", "sources", "li_connected"];
+  function cleanPerson(p) {
+    const o = {}; PERSON_FIELDS.forEach(k => { if (p[k] !== undefined) o[k] = p[k]; });
+    return o;
+  }
+  function exportForest() {
+    const tag_counts = {};
+    PEOPLE.forEach(p => (p.tags || []).forEach(t => tag_counts[t] = (tag_counts[t] || 0) + 1));
+    return { gardener: DATA.gardener || null, generated: DATA.generated || null,
+      people: PEOPLE.map(cleanPerson), tag_counts, total: PEOPLE.length,
+      edges: DATA.edges || [] };
+  }
+  function saveForest() {
+    if (DEMO_MODE) return false;
+    try { localStorage.setItem("ff-data", JSON.stringify(exportForest())); return true; }
+    catch (e) { toast("couldn't save: " + e.message); return false; }
+  }
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  function renderEdit(p) {
+    const f = (label, id, val, ph) => '<label for="' + id + '">' + label + '</label>' +
+      '<input id="' + id + '" value="' + esc(val || "") + '" placeholder="' + (ph || "") + '">';
+    const notesSec = (p.sections || []).find(s => /^notes/i.test(s.title));
+    pbody.innerHTML = '<div class="p-form">' +
+      '<h2 style="margin-top:0">Edit ' + esc(firstName(p)) + '</h2>' +
+      f("Name", "ed-name", p.name) +
+      f("City", "ed-city", p.city) +
+      f("What they do", "ed-occ", p.occupation) +
+      f("Birthday (yyyy-mm-dd)", "ed-bday", p.birthday, "1990-05-02") +
+      f("Groups / tags (comma-separated — these shape the groves)", "ed-tags", (p.tags || []).join(", ")) +
+      f("Hobbies (comma-separated)", "ed-hob", (p.hobbies || []).join(", ")) +
+      '<label for="ed-grove">Grove</label><select id="ed-grove">' +
+        ["friends", "family", "partner"].map(g => '<option value="' + g + '"' +
+          (p.grove === g ? " selected" : "") + '>' + g + '</option>').join("") + '</select>' +
+      '<label for="ed-intro">About them</label>' +
+      '<textarea id="ed-intro" rows="4">' + esc(p.intro || "") + '</textarea>' +
+      '<label for="ed-notes">Notes</label>' +
+      '<textarea id="ed-notes" rows="4">' + esc(notesSec ? notesSec.body.replace(/^-\s*/, "") : "") + '</textarea>' +
+      '<div class="p-acts"><button class="fchip" id="ed-save">save</button>' +
+      '<button class="fchip" id="ed-cancel">cancel</button></div></div>';
+    document.getElementById("ed-cancel").addEventListener("click", () => openPanel(p));
+    document.getElementById("ed-save").addEventListener("click", () => {
+      const v = id => document.getElementById(id).value.trim();
+      const list = s => v(s).split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+      if (v("ed-name")) p.name = v("ed-name");
+      p.city = v("ed-city"); p.occupation = v("ed-occ");
+      p.birthday = /^\d{4}-\d{2}-\d{2}$/.test(v("ed-bday")) ? v("ed-bday") : null;
+      p.tags = list("ed-tags").map(t => t.toLowerCase().replace(/\s+/g, "-"));
+      p.hobbies = list("ed-hob");
+      p.grove = document.getElementById("ed-grove").value;
+      p.intro = v("ed-intro");
+      p.sections = (p.sections || []).filter(s => !/^notes/i.test(s.title));
+      if (v("ed-notes")) p.sections.push({ title: "Notes", body: "- " + v("ed-notes") });
+      if (saveForest()) {   // tags/grove reshape the forest — reload keeps everything consistent
+        location.hash = "#p=" + encodeURIComponent(p.slug);
+        location.reload();
+      }
+    });
+    pbody.parentElement.scrollTop = 0;
+  }
+  function renderLog(p) {
+    pbody.innerHTML = '<div class="p-form">' +
+      '<h2 style="margin-top:0">Log a moment with ' + esc(firstName(p)) + '</h2>' +
+      '<label for="log-date">When (yyyy-mm-dd)</label>' +
+      '<input id="log-date" value="' + todayStr() + '">' +
+      '<label for="log-text">What happened?</label>' +
+      '<textarea id="log-text" rows="4" placeholder="coffee at the park — planning her book launch"></textarea>' +
+      '<div class="p-acts"><button class="fchip" id="log-save">save moment</button>' +
+      '<button class="fchip" id="log-cancel">cancel</button></div></div>';
+    document.getElementById("log-cancel").addEventListener("click", () => openPanel(p));
+    document.getElementById("log-save").addEventListener("click", () => {
+      const date = document.getElementById("log-date").value.trim();
+      const text = document.getElementById("log-text").value.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !text) return;
+      p.timeline = p.timeline || [];
+      p.timeline.push({ date, text });
+      if (!p.last_interaction || date > p.last_interaction) p.last_interaction = date;
+      saveForest();
+      toast("moment planted 🌱");
+      openPanel(p);
+    });
+    pbody.parentElement.scrollTop = 0;
+  }
   function openPanel(p) {
     closeAllPopups("panel");
     selP = p;
@@ -4814,8 +4942,10 @@
       '<h2>' + esc(p.name) + '</h2>' +
       '<div class="p-role">' + (ROLE[p.grove] || esc((p.occupation || "").split("(")[0].trim()) || "Friend") + '</div>' +
       (p.reconnect === "priority" ? '<div class="p-badge water">Time to reach out — quiet since ' + fmtDate(p.last_interaction) + '</div>' : "") +
-      '<button class="fchip p-walker" id="p-walker">' +
-        (hasWalker(p) ? "remove their pixel person" : "add their pixel person to the forest") + '</button>' +
+      '<div class="p-acts"><button class="fchip" id="p-walker">' +
+        (hasWalker(p) ? "remove their pixel person" : "add their pixel person") + '</button>' +
+      '<button class="fchip" id="p-edit">edit details</button>' +
+      '<button class="fchip" id="p-log">log a moment</button></div>' +
       '<div class="chips">' + (p.tags || []).slice(0, 8).map(t => '<span class="chip">' + esc(t) + '</span>').join("") + '</div>' +
       '<dl class="p-meta">' +
         (p.city ? '<dt>City</dt><dd>' + esc(p.city.split("(")[0].trim()) + '</dd>' : "") +
@@ -4846,8 +4976,13 @@
         toast(firstName(p) + " is now strolling the forest!");
       }
       saveWalkers(); needsDraw = true;
-      wbtn.textContent = hasWalker(p) ? "remove their pixel person" : "add their pixel person to the forest";
+      wbtn.textContent = hasWalker(p) ? "remove their pixel person" : "add their pixel person";
     });
+    const guard = fn => () => DEMO_MODE
+      ? toast("the demo forest is read-only — plant your own from the onboarding!")
+      : fn(p);
+    pbody.querySelector("#p-edit").addEventListener("click", guard(renderEdit));
+    pbody.querySelector("#p-log").addEventListener("click", guard(renderLog));
     if (!ROAM) flyTo(p);
     pbody.parentElement.scrollTop = 0;
   }
@@ -5046,7 +5181,10 @@
       rowList(scored.slice(0, 12).map(x => x.p), p => (metaLine(p) || p._circle)));
   }
   function render(lead, html) {
-    askAns.innerHTML = (lead ? '<p class="ans-lead">' + esc(lead) + '</p>' : "") + html;
+    const q = (document.getElementById("ask-input").value || "").trim();
+    const aiRow = q ? '<div style="margin-top:10px"><button class="ans-act" id="ask-ai">' +
+      '✦ ask Claude for a smarter answer</button></div>' : "";
+    askAns.innerHTML = (lead ? '<p class="ans-lead">' + esc(lead) + '</p>' : "") + html + aiRow;
     askAns.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => {
       const p = PEOPLE.find(x => x.slug === b.dataset.open);
       if (p) { closeAsk(); if (ROAM) { farmer.x = p.x; farmer.y = p.y + 30; } flyTo(p); openPanel(p); }
@@ -5055,6 +5193,62 @@
       const p = PEOPLE.find(x => x.slug === b.dataset.text);
       if (p) { closeAsk(); openNote(p); }
     }));
+    const ai = document.getElementById("ask-ai");
+    if (ai) ai.addEventListener("click", () => runAskClaude(q));
+  }
+
+  /* ---- AI answers in the search bar (user's own Claude key) ---- */
+  function forestContext() {
+    const rows = [...PEOPLE].sort((a, b) => (b.volume || 0) - (a.volume || 0)).slice(0, 400)
+      .map(p => [p.name,
+        p.occupation && "does: " + p.occupation,
+        p.city && "city: " + p.city,
+        (p.tags || []).length && "groups: " + p.tags.join("/"),
+        p.last_interaction && "last talked: " + p.last_interaction,
+        p.birthday && "birthday: " + p.birthday,
+        p.reconnect === "priority" && "needs reaching out",
+        p.intro && (p.intro.length > 140 ? p.intro.slice(0, 138) + "…" : p.intro),
+      ].filter(Boolean).join(" | "));
+    return rows.join("\n");
+  }
+  async function runAskClaude(q) {
+    const key = localStorage.getItem("ff-key");
+    if (!key) {
+      askAns.innerHTML = '<p class="ans-lead">Connect Claude first — Settings (gear) → ' +
+        '<b>Claude API key</b>. Your key stays in this browser; calls go straight to Anthropic.</p>';
+      return;
+    }
+    askAns.innerHTML = '<p class="ans-lead">✦ Claude is thinking…</p>';
+    try {
+      const who = (DATA.gardener && DATA.gardener.name) || "the user";
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-5",
+          max_tokens: 4096,
+          messages: [{ role: "user", content:
+            "You are the friendly spirit of " + who + "'s friend forest — a personal " +
+            "friendship CRM. Below is one line per friend. Answer the question warmly and " +
+            "briefly (a short paragraph or a short list), grounded ONLY in this data. " +
+            "If the data can't answer it, say so.\n\n" + forestContext() +
+            "\n\nQuestion: " + q }],
+        }),
+      });
+      if (!res.ok) throw new Error("API " + res.status + (res.status === 401 ? " — check your key" : ""));
+      const msg = await res.json();
+      if (msg.stop_reason === "refusal") throw new Error("Claude declined this question");
+      const text = (msg.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+      askAns.innerHTML = '<div class="ans-card"><div class="ans-snip">' +
+        esc(text).replace(/\n/g, "<br>") + '</div></div>';
+    } catch (e) {
+      askAns.innerHTML = '<p class="ans-lead">Hmm — ' + esc(e.message) + '</p>';
+    }
   }
 
   const askOverlay = document.getElementById("ask-overlay");
@@ -5213,6 +5407,15 @@
   // forest before the first paint — otherwise gaps show where hidden trees would be
   if (hideFaded || hideSmall) relayout(true);
   buildTerrain(); spawnCritters(); fitView(); buildAmbient(); loadStreak(); updateQuest();
+  // reopen a person after an edit-triggered reload (#p=slug)
+  {
+    const hm = location.hash.match(/^#p=(.+)$/);
+    if (hm) {
+      history.replaceState(null, "", location.pathname);
+      const hp = PEOPLE.find(x => x.slug === decodeURIComponent(hm[1]));
+      if (hp) setTimeout(() => { flyTo(hp); openPanel(hp); }, 60);
+    }
+  }
   // the app div can still measure 0 while this (large) document parses, and iOS keeps
   // resizing the viewport as the URL bar settles — refit over the next second so the
   // canvas always fills the screen and the map stays fitted
