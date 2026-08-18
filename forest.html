@@ -648,6 +648,14 @@
      common tags become whimsical named groves, everyone else in the meadow */
   const GROVE_SUFFIX = ["Grove", "Thicket", "Hollow", "Meadow", "Glade",
     "Woods", "Pines", "Ridge", "Bramble", "Heights"];
+  /* names for groves the data can't name — every one is different, so a forest
+     never reads as a dozen identical meadows */
+  const GROVE_NAMES = ["Fernhollow", "Bramblewick", "Mossgate", "Thistledown",
+    "Larkspur", "Wrenfield", "Hazelmere", "Cloverdown", "Amberlyn", "Birchwold",
+    "Sorrelwick", "Duskfern", "Willowmere", "Pinequill", "Marigold", "Elderbrook",
+    "Foxglove", "Silverpine", "Ivywood", "Nettlebank", "Rowanhill", "Sunmeadow",
+    "Alderfen", "Quillbramble", "Honeysett", "Rushlight", "Gorsewind", "Applecross",
+    "Tanglewood", "Brackenmoor", "Speedwell", "Yarrowdell", "Cinderpost", "Lantern Fen"];
   function groveName(tag) {
     const pretty = tag.replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
     return pretty + " " + GROVE_SUFFIX[dayHash(tag) % GROVE_SUFFIX.length];
@@ -766,6 +774,17 @@
        back to alphabet when a name is genuinely all we have */
     const MAX_GROVE = 34;
     const slugId = t => t.replace(/\s+/g, "-");
+    const usedNames = new Set(groves.map(g => g.label));
+    let namePick = 0;
+    function nextGroveName() {   // walks the pool, never repeating a label
+      for (let i = 0; i < GROVE_NAMES.length * GROVE_SUFFIX.length; i++) {
+        const n = GROVE_NAMES[namePick % GROVE_NAMES.length] + " " +
+          GROVE_SUFFIX[Math.floor(namePick / GROVE_NAMES.length) % GROVE_SUFFIX.length];
+        namePick++;
+        if (!usedNames.has(n)) { usedNames.add(n); return n; }
+      }
+      return "Wildflower Meadow " + (++namePick);
+    }
     const SPLIT_KEYS = [
       { name: "shared tag", of: p2 => p2.tags || [], label: t => groveName(t) },
       { name: "same workplace", of: p2 => { const w = (p2.occupation || "").split(" at ").pop()
@@ -824,8 +843,12 @@
             if (!members.length) continue;
             const letters = members[0].name[0].toUpperCase() +
               (members.length > 1 ? "\u2013" + members[members.length - 1].name[0].toUpperCase() : "");
-            chunks.push({ id: g.id + "-" + (c + 1), label: g.label,
-              sub: parts > 1 || split ? letters : g.sub, members });
+            // each nameless chunk gets its own name — a wall of identical
+            // "Wildflower Meadow"s tells you nothing about where you are
+            const many = parts > 1 || split;
+            chunks.push({ id: g.id + "-" + (c + 1),
+              label: many ? nextGroveName() : g.label,
+              sub: many ? letters : g.sub, members });
           }
         }
         if (chunks.length < 2) continue;
