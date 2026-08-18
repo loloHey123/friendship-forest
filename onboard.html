@@ -205,6 +205,20 @@
     border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
     cursor: pointer; }
   .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
+  .mtable { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+  .mtable th { text-align: left; font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-soft); padding: 0 8px 6px; font-weight: 800; }
+  .mtable td { padding: 9px 8px; border-top: 1.5px solid var(--line); vertical-align: top; }
+  .mtable td.who { font-weight: 800; }
+  .mtable td.meta { color: var(--ink-soft); }
+  .mtable td.acts { text-align: right; white-space: nowrap; }
+  .mtable tr.editing { background: var(--strip); }
+  .rowbtn { font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    background: none; border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 5px 11px; color: var(--ink); margin-left: 6px; }
+  .rowbtn:hover { border-color: var(--lime-deep); }
+  .rowbtn.rm:hover { border-color: #c94f4f; color: #c94f4f; }
+  .mcount { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-top: 14px; }
   @media (max-width: 560px) {
     body { padding: 10px; }
     .frame { border-radius: 26px; padding: 8px; }
@@ -279,6 +293,9 @@
       <button class="card" data-goto="10"><span class="badge">✓</span><span class="go" id="hub-w">open →</span>
         <h3>WhatsApp <span class="tag fast">a few minutes</span></h3>
         <p>Export your favorite chats. Texting history for everyone else.</p></button>
+      <button class="card" data-goto="11"><span class="badge">✓</span><span class="go" id="hub-s">open →</span>
+        <h3>Social media <span class="tag wait">export wait varies</span></h3>
+        <p>Instagram, Facebook, X and friends. Who you follow, and who you actually message.</p></button>
       <button class="card" data-goto="9"><span class="badge">✓</span><span class="go" id="hub-h">open →</span>
         <h3>By hand <span class="tag fast">always works</span></h3>
         <p>No exports needed. Type friends in one at a time, starting with your favorites.</p></button>
@@ -296,12 +313,15 @@
     <ol class="howto">
       <li><b>Google:</b> contacts.google.com → select all → Export → Google CSV</li>
       <li><b>Apple:</b> Contacts app → select all → File → Export → Export vCard</li>
-      <li>Drop the file below — both .csv and .vcf work</li>
+      <li>Drop the files below — .csv and .vcf both work, several at once is fine</li>
     </ol>
     <label class="drop" id="drop-contacts">
-      <span id="drop-contacts-txt">Drop <b>contacts.csv</b> or <b>.vcf</b> here, or click to browse</span>
-      <input type="file" accept=".csv,.vcf,text/csv,text/vcard">
+      <span id="drop-contacts-txt">Drop <b>contacts.csv</b> or <b>.vcf</b> files here, or click to browse —
+        several at once is fine</span>
+      <input type="file" accept=".csv,.vcf,text/csv,text/vcard" multiple>
     </label>
+    <p class="hint">Got both a Google export and an Apple vCard? Drop them both — people in
+      both files are merged into one tree, not duplicated.</p>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2" id="contacts-next">Back to sources</button>
@@ -318,7 +338,7 @@
     </ol>
     <label class="drop" id="drop-linkedin">
       <span id="drop-linkedin-txt">Already have it? Drop <b>Connections.csv</b> here</span>
-      <input type="file" accept=".csv,text/csv">
+      <input type="file" accept=".csv,text/csv" multiple>
     </label>
     <p class="hint">No file yet? That's normal. Your progress is saved, so come back and drop it any time.</p>
     <div class="grow-space"></div>
@@ -368,8 +388,9 @@
       <input id="m-note" placeholder="e.g. met at Sam's party, makes great ceramics"></div>
     <div class="btnrow" style="margin-top:4px">
       <button class="btn primary" id="m-add">Add this friend</button>
+      <button class="btn ghost" id="m-cancel" style="display:none">Cancel edit</button>
     </div>
-    <div id="m-list" class="mchips"></div>
+    <div id="m-list"></div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
@@ -389,6 +410,35 @@
       <input type="file" accept=".txt,text/plain" multiple>
     </label>
     <p class="hint">Only message counts and dates are used, never the messages themselves.</p>
+    <div class="grow-space"></div>
+    <div class="btnrow">
+      <button class="btn primary" data-goto="2">Back to sources</button>
+    </div>
+  </section>
+
+  <!-- STEP 11 · social media -->
+  <section class="step" data-step="11">
+    <h2>Add your social<br>circles</h2>
+    <p class="lead">Every big platform will hand you your own data. Drop whatever arrives —
+      follow lists become trees, message threads make them tall.</p>
+    <ol class="howto">
+      <li><b>Instagram:</b> Settings → Accounts Center → Your information and permissions →
+        Download your information → <b>JSON</b>. Use <b>followers/following</b> and <b>messages</b>.</li>
+      <li><b>Facebook:</b> same Accounts Center download → <b>JSON</b>. Use
+        <b>friends.json</b> and <b>messages</b>.</li>
+      <li><b>X:</b> Settings → Your account → Download an archive → drop
+        <b>following.js</b> / <b>follower.js</b>.</li>
+      <li><b>Anything else</b> (Discord, Strava, Goodreads…): a .csv or .json with a
+        name column works.</li>
+    </ol>
+    <label class="drop" id="drop-social">
+      <span id="drop-social-txt">Drop your social exports here — <b>.json</b>, <b>.js</b> or
+        <b>.csv</b>, several at once is fine</span>
+      <input type="file" accept=".json,.js,.csv,.txt,application/json,text/csv,text/plain" multiple>
+    </label>
+    <p class="hint">Unzip the export first and drop the files inside. Only names, counts and
+      dates are read — never the messages themselves, and nothing leaves this browser.</p>
+    <div id="social-list"></div>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
@@ -437,7 +487,7 @@
 (function () {
   "use strict";
   const state = { name: "", city: "", contacts: [], linkedin: [], messages: [],
-    whatsapp: [], manual: [], ai: false, key: "" };
+    whatsapp: [], social: [], manual: [], ai: false, key: "" };
   let step = 0;
   const TOTAL = 8; // steps 1..8 shown in the dash meter
 
@@ -447,7 +497,7 @@
       localStorage.setItem("ff-draft", JSON.stringify({
         step, name: state.name, city: state.city, contacts: state.contacts,
         linkedin: state.linkedin, messages: state.messages,
-        whatsapp: state.whatsapp, manual: state.manual }));
+        whatsapp: state.whatsapp, social: state.social, manual: state.manual }));
     } catch (e) {}
   }
 
@@ -463,7 +513,7 @@
     document.getElementById("steplabel").textContent = disp + " of " + TOTAL;
   }
   function go(n) {
-    step = Math.max(0, Math.min(10, n));
+    step = Math.max(0, Math.min(11, n));
     if (step > 0) saveDraft();
     document.querySelectorAll(".step").forEach(s =>
       s.classList.toggle("on", +s.dataset.step === step));
@@ -505,27 +555,70 @@
     mark("hub-l", state.linkedin.length);
     mark("hub-m", state.messages.length);
     mark("hub-w", state.whatsapp.length);
+    mark("hub-s", state.social.length);
     mark("hub-h", state.manual.length);
     saveDraft();
   }
 
   /* ---------- manual add ---------- */
+  let editingManual = -1;   // index being edited, or -1 when adding a new friend
+  const MFIELDS = ["m-name", "m-group", "m-city", "m-note"];
   function renderManual() {
     const box = document.getElementById("m-list");
-    box.innerHTML = state.manual.map((m, i) =>
-      '<button type="button" class="mchip" data-rm="' + i + '" title="Remove">' +
-      esc2(m.name) + ' ✕</button>').join("");
+    if (!state.manual.length) { box.innerHTML = ""; return; }
+    box.innerHTML =
+      '<table class="mtable"><thead><tr><th>Friend</th><th>Group</th><th>City</th>' +
+      '<th></th></tr></thead><tbody>' +
+      state.manual.map((m, i) =>
+        '<tr' + (i === editingManual ? ' class="editing"' : '') + '>' +
+        '<td class="who">' + esc2(m.name) +
+          (m.note ? '<div class="meta" style="font-weight:600;font-size:12.5px">' +
+            esc2(m.note) + '</div>' : '') + '</td>' +
+        '<td class="meta">' + (esc2(m.group) || "—") + '</td>' +
+        '<td class="meta">' + (esc2(m.city) || "—") + '</td>' +
+        '<td class="acts">' +
+          '<button type="button" class="rowbtn" data-ed="' + i + '">Edit</button>' +
+          '<button type="button" class="rowbtn rm" data-rm="' + i + '">Remove</button>' +
+        '</td></tr>').join("") +
+      '</tbody></table>' +
+      '<div class="mcount">' + state.manual.length + ' planted by hand</div>';
     box.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => {
-      state.manual.splice(+b.dataset.rm, 1); renderManual(); saveDraft();
+      const i = +b.dataset.rm;
+      state.manual.splice(i, 1);
+      if (editingManual === i) stopEditing();
+      else if (editingManual > i) editingManual--;
+      renderManual(); saveDraft();
+    }));
+    box.querySelectorAll("[data-ed]").forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.ed, m = state.manual[i];
+      editingManual = i;
+      document.getElementById("m-name").value = m.name || "";
+      document.getElementById("m-group").value = m.group || "";
+      document.getElementById("m-city").value = m.city || "";
+      document.getElementById("m-note").value = m.note || "";
+      document.getElementById("m-add").textContent = "Save changes";
+      document.getElementById("m-cancel").style.display = "";
+      renderManual();
+      document.getElementById("m-name").focus();
     }));
   }
+  function stopEditing() {
+    editingManual = -1;
+    MFIELDS.forEach(id => document.getElementById(id).value = "");
+    document.getElementById("m-add").textContent = "Add this friend";
+    document.getElementById("m-cancel").style.display = "none";
+  }
+  document.getElementById("m-cancel").addEventListener("click", () => {
+    stopEditing(); renderManual();
+  });
   document.getElementById("m-add").addEventListener("click", () => {
     const get = id => document.getElementById(id).value.trim();
     const name = get("m-name");
     if (!name) { document.getElementById("m-name").focus(); return; }
-    state.manual.push({ name, group: get("m-group"), city: get("m-city"), note: get("m-note") });
-    ["m-name", "m-group", "m-city", "m-note"].forEach(id =>
-      document.getElementById(id).value = "");
+    const entry = { name, group: get("m-group"), city: get("m-city"), note: get("m-note") };
+    if (editingManual > -1) state.manual[editingManual] = entry;
+    else state.manual.push(entry);
+    stopEditing();
     document.getElementById("m-name").focus();
     renderManual(); saveDraft();
   });
@@ -607,21 +700,38 @@
     }).filter(c => c.name && (c.phone || c.email));
   }
 
+  /* several exports can land here (Google CSV + Apple vCard, work + personal…) —
+     each new file fills in blanks on people we already have rather than replacing them */
+  function addContacts(list) {
+    const norm = s2 => (s2 || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const byKey = new Map(state.contacts.map(c => [norm(c.name), c]));
+    let added = 0;
+    list.forEach(c => {
+      const k = norm(c.name);
+      if (!k) return;
+      const e = byKey.get(k);
+      if (!e) { byKey.set(k, c); state.contacts.push(c); added++; return; }
+      Object.keys(c).forEach(f => { if (!e[f] && c[f]) e[f] = c[f]; });
+    });
+    return added;
+  }
+  function contactsMsg(added) {
+    const withB = state.contacts.filter(c => c.birthday).length;
+    const withJ = state.contacts.filter(c => c.org || c.title).length;
+    return "<b>" + state.contacts.length + " people</b> (" + added + " new) — " +
+      withJ + " with jobs, " + withB + " with birthdays. Drop another export, or head back.";
+  }
+
   wireDrop("drop-contacts", (file, zone) => {
     file.text().then(text => {
       if (/\.vcf$/i.test(file.name) || /^BEGIN:VCARD/im.test(text)) {
-        state.contacts = parseVCF(text);
-        if (!state.contacts.length) {
+        const found = parseVCF(text);
+        if (!found.length) {
           zoneMsg(zone, "drop-contacts-txt", false,
             "No contacts found in that vCard. Try exporting again from the Contacts app?");
           return;
         }
-        const withB = state.contacts.filter(c => c.birthday).length;
-        const withJ = state.contacts.filter(c => c.org || c.title).length;
-        zoneMsg(zone, "drop-contacts-txt", true,
-          "<b>" + state.contacts.length + " people found</b> — " +
-          withJ + " with jobs, " + withB + " with birthdays");
-        setTimeout(() => go(2), 2200);
+        zoneMsg(zone, "drop-contacts-txt", true, contactsMsg(addContacts(found)));
         return;
       }
       const rows = parseCSV(text);
@@ -635,7 +745,7 @@
       const get = (o, ...keys) => { for (const k of keys) {
         const kk = Object.keys(o).find(x => x.toLowerCase() === k); if (kk && o[kk]) return o[kk]; }
         return ""; };
-      state.contacts = objs.map(o => ({
+      const found = objs.map(o => ({
         name: (get(o, "first name", "given name") + " " + get(o, "last name", "family name")).trim(),
         org: get(o, "organization name", "organization 1 - name"),
         title: get(o, "organization title", "organization 1 - title"),
@@ -643,12 +753,7 @@
         phone: get(o, "phone 1 - value"), email: get(o, "e-mail 1 - value"),
         notes: get(o, "notes"),
       })).filter(c => c.name && (c.phone || c.email));
-      const withB = state.contacts.filter(c => c.birthday).length;
-      const withJ = state.contacts.filter(c => c.org || c.title).length;
-      zoneMsg(zone, "drop-contacts-txt", true,
-        "<b>" + state.contacts.length + " people found</b> — " +
-        withJ + " with jobs, " + withB + " with birthdays");
-      setTimeout(() => go(2), 2200);
+      zoneMsg(zone, "drop-contacts-txt", true, contactsMsg(addContacts(found)));
     });
   });
 
@@ -662,15 +767,17 @@
         return;
       }
       const objs = toObjects(rows, hi);
-      state.linkedin = objs.map(o => {
+      const found = objs.map(o => {
         const get = k => { const kk = Object.keys(o).find(x => x.toLowerCase().includes(k));
           return kk ? o[kk] : ""; };
         return { name: (get("first name") + " " + get("last name")).trim(),
           company: get("company"), position: get("position") };
       }).filter(c => c.name);
+      const seenL = new Set(state.linkedin.map(c => c.name.toLowerCase()));
+      found.forEach(c => { if (!seenL.has(c.name.toLowerCase())) {
+        seenL.add(c.name.toLowerCase()); state.linkedin.push(c); } });
       zoneMsg(zone, "drop-linkedin-txt", true,
         "<b>" + state.linkedin.length + " connections</b> — jobs and companies locked in");
-      setTimeout(() => go(2), 2200);
     });
   });
 
@@ -743,6 +850,169 @@
         " messages). Drop more, or head back.");
     });
   });
+  /* ---------- social media exports (Instagram, Facebook, X, anything with names) ----------
+     Every platform hands back a different shape, so this sniffs the file rather than
+     trusting its name. Only display names, message counts and dates are kept. */
+  const NET_LABEL = { instagram: "Instagram", facebook: "Facebook", x: "X",
+    social: "social" };
+
+  function socialDate(ts) {   // seconds or milliseconds since epoch, or an ISO string
+    if (!ts) return null;
+    let n = typeof ts === "string" ? (/^\d+$/.test(ts) ? +ts : Date.parse(ts)) : ts;
+    if (!n || isNaN(n)) return null;
+    if (n < 1e11) n *= 1000;                 // seconds -> ms
+    return new Date(n).toISOString().slice(0, 10);
+  }
+  /* Meta exports mangle non-ASCII names (mojibake) - put them back */
+  function fixMeta(str) {
+    if (!str || !/[À-ÿ]/.test(str)) return str || "";
+    try { return decodeURIComponent(escape(str)); } catch (e) { return str; }
+  }
+  function addSocial(net, name, extra) {
+    name = fixMeta((name || "").trim());
+    if (!name) return false;
+    const norm = x => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (norm(name) === norm(state.name || " ")) return false;   // that's you
+    // one person per name across every platform — the same friend shows up in an
+    // Instagram follow list and a Facebook thread, and that's still one tree
+    let e = state.social.find(w => norm(w.name) === norm(name));
+    if (!e) { e = { name, network: net, messages: 0, first: null, last: null };
+      state.social.push(e); }
+    else if (net !== "social" && e.network === "social") e.network = net;
+    if (extra) {
+      e.messages += extra.messages || 0;
+      if (extra.first && (!e.first || extra.first < e.first)) e.first = extra.first;
+      if (extra.last && (!e.last || extra.last > e.last)) e.last = extra.last;
+    }
+    return true;
+  }
+
+  /* one Instagram/Facebook message thread: message_1.json */
+  function socialThread(net, j) {
+    const parts = (j.participants || []).map(p2 => fixMeta(p2.name)).filter(Boolean);
+    const msgs = j.messages || [];
+    if (!parts.length || parts.length > 6) return 0;   // skip big group threads
+    const times = msgs.map(m => socialDate(m.timestamp_ms || m.timestamp)).filter(Boolean).sort();
+    const selfN = (state.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    let n = 0;
+    parts.forEach(name => {
+      if (name.toLowerCase().replace(/[^a-z0-9]/g, "") === selfN) return;
+      if (addSocial(net, name, { messages: msgs.length,
+        first: times[0] || null, last: times[times.length - 1] || null })) n++;
+    });
+    return n;
+  }
+
+  /* Instagram followers/following entries: { string_list_data: [{ value, timestamp }] } */
+  function socialStringList(net, arr) {
+    let n = 0;
+    arr.forEach(item => {
+      const d = (item && item.string_list_data || [])[0];
+      if (!d) return;
+      const name = fixMeta(item.title) || d.value;
+      if (addSocial(net, name, { first: socialDate(d.timestamp) })) n++;
+    });
+    return n;
+  }
+
+  function parseSocialJSON(net, j) {
+    if (Array.isArray(j)) {
+      if (j.length && j[0] && j[0].string_list_data) return socialStringList(net, j);
+      // X archive arrays: [{ following: { accountId, userLink } }, ...]
+      let n = 0;
+      j.forEach(item => {
+        const v = item && (item.following || item.follower || item.follow || item);
+        if (!v || typeof v !== "object") return;
+        const name = v.name || v.screenName || v.userName || v.accountDisplayName ||
+          v.username || v.handle;
+        if (name && addSocial(net, name)) n++;
+      });
+      return n;
+    }
+    if (!j || typeof j !== "object") return 0;
+    if (j.messages && j.participants) return socialThread(net, j);
+    // Facebook friends.json and Instagram's keyed wrappers
+    let n = 0;
+    Object.keys(j).forEach(k => {
+      const v = j[k];
+      if (!Array.isArray(v)) return;
+      if (/friend|follow|connection|contact|close_friends|subscri/i.test(k))
+        n += parseSocialJSON(net, v);
+      else if (v.length && v[0] && (v[0].string_list_data || v[0].name))
+        n += parseSocialJSON(net, v);
+    });
+    return n;
+  }
+
+  function sniffNetwork(filename, text) {
+    const f = filename.toLowerCase();
+    if (/instagram|^connections|followers_|following\.json/.test(f)) return "instagram";
+    if (/facebook|friends_?(v2)?\.json|your_friends/.test(f)) return "facebook";
+    if (/^(follower|following|direct-messages|account)\.js$/.test(f) ||
+        /window\.YTD/.test(text.slice(0, 200))) return "x";
+    if (/relationships_|ig_/.test(text.slice(0, 400))) return "instagram";
+    if (/friends_v2/.test(text.slice(0, 400))) return "facebook";
+    return "social";
+  }
+
+  wireDrop("drop-social", (file, zone) => {
+    file.text().then(text => {
+      const net = sniffNetwork(file.name, text);
+      let found = 0;
+      try {
+        if (/^\s*window\.YTD/.test(text)) {          // X archives are JS assignments
+          const arr = JSON.parse(text.slice(text.indexOf("=") + 1).trim());
+          found = parseSocialJSON("x", arr);
+          if (!found) {
+            zoneMsg(zone, "drop-social-txt", false,
+              "That X file only has account IDs, no names - X strips them. " +
+              "Try following.js from a newer archive, or add those people by hand.");
+            return;
+          }
+        } else if (/\.csv$/i.test(file.name)) {      // any platform's CSV, name column
+          const rows = parseCSV(text);
+          const hi = rows.findIndex(r => /\b(name|full name|first name|username|display name)\b/
+            .test(r.join(",").toLowerCase()));
+          if (hi === -1) throw new Error("no name column");
+          const objs = toObjects(rows, hi);
+          objs.forEach(o => {
+            const key = Object.keys(o).find(k => /^(name|full name|display name|username)$/i.test(k)) ||
+              Object.keys(o).find(k => /name/i.test(k));
+            if (key && addSocial(net, o[key])) found++;
+          });
+        } else {
+          found = parseSocialJSON(net, JSON.parse(text));
+        }
+      } catch (e) {
+        zoneMsg(zone, "drop-social-txt", false,
+          "Couldn't read " + esc2(file.name) + ". Drop the .json / .js files from inside the " +
+          "unzipped export (followers, following, friends, or a message thread).");
+        return;
+      }
+      if (!found) {
+        zoneMsg(zone, "drop-social-txt", false,
+          "No names in " + esc2(file.name) + " - that one's probably a settings or logins file. " +
+          "Try followers/following, friends, or a messages folder.");
+        return;
+      }
+      renderSocial();
+      zoneMsg(zone, "drop-social-txt", true,
+        "<b>" + found + " from " + esc2(NET_LABEL[net] || net) + "</b> - " +
+        state.social.length + " social people so far. Drop more, or head back.");
+    });
+  });
+
+  function renderSocial() {
+    const box = document.getElementById("social-list");
+    if (!box) return;
+    if (!state.social.length) { box.innerHTML = ""; return; }
+    const byNet = {};
+    state.social.forEach(p2 => byNet[p2.network] = (byNet[p2.network] || 0) + 1);
+    box.innerHTML = '<div class="mcount">' +
+      Object.keys(byNet).map(k => byNet[k] + " from " + esc2(NET_LABEL[k] || k)).join(" &middot; ") +
+      '</div>';
+  }
+
   function esc2(s) { return (s || "").replace(/[&<>"]/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
@@ -780,6 +1050,16 @@
       if (m.first && (!e.first || m.first < e.first)) e.first = m.first;
       if (m.last && (!e.last || m.last > e.last)) e.last = m.last;
       if (!e.sources.includes("whatsapp")) e.sources.push("whatsapp");
+    });
+    state.social.forEach(m => {   // message counts stack on top of iMessage/WhatsApp
+      const k = norm(m.name);
+      if (!k || (selfN && k === selfN)) return;
+      if (!byKey.has(k)) byKey.set(k, { name: m.name, sources: [] });
+      const e = byKey.get(k);
+      e.messages = (e.messages || 0) + (m.messages || 0);
+      if (m.first && (!e.first || m.first < e.first)) e.first = m.first;
+      if (m.last && (!e.last || m.last > e.last)) e.last = m.last;
+      if (!e.sources.includes(m.network)) e.sources.push(m.network);
     });
     state.manual.forEach(m => upsert(m.name, { group: m.group, manualCity: m.city,
       notes: m.note, _src: "manual" }));
@@ -948,10 +1228,11 @@
       Object.assign(state, {
         name: d.name || "", city: d.city || "", contacts: d.contacts || [],
         linkedin: d.linkedin || [], messages: d.messages || [],
-        whatsapp: d.whatsapp || [], manual: d.manual || [] });
+        whatsapp: d.whatsapp || [], social: d.social || [],
+        manual: d.manual || [] });
       document.getElementById("f-name").value = state.name;
       document.getElementById("f-city").value = state.city;
-      renderManual();
+      renderManual(); renderSocial();
       go(d.step);
       const zone = document.getElementById("progress-zone");
       const note = document.createElement("div");
