@@ -184,6 +184,29 @@
   .settings-menu .kofi-btn .bi { stroke: currentColor; }
   .settings-menu .danger-btn { color: #c94f4f; }
   .settings-menu .danger-btn .bi { stroke: #c94f4f; }
+  .sync-modal { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .sync-card { background: var(--panel); border: 2px solid var(--panel-line);
+    border-radius: 16px; padding: 20px 22px; width: min(92vw, 460px);
+    box-shadow: 0 18px 50px var(--shadow); font-size: 13px; color: var(--ink); }
+  .sync-card h3 { font-family: var(--serif); font-size: 20px; margin: 0 0 6px; }
+  .sync-card p { margin: 0 0 12px; color: var(--ink-soft); line-height: 1.5; }
+  .sync-card label { display: block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 10px 0 4px; }
+  .sync-card label span { text-transform: none; letter-spacing: 0; opacity: .8; }
+  .sync-card input { width: 100%; box-sizing: border-box; font: 13px var(--mono);
+    padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--panel-line);
+    background: transparent; color: var(--ink); }
+  .sync-card input:focus-visible { border-color: var(--accent); outline: none; }
+  .sync-status { min-height: 18px; margin-top: 10px; font-family: var(--mono);
+    font-size: 12px; color: var(--accent); overflow-wrap: anywhere; }
+  .sync-status.bad { color: #c94f4f; }
+  .sync-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .sync-acts button { font-family: var(--mono); font-size: 12.5px; cursor: pointer;
+    border-radius: 18px; padding: 9px 16px; font-weight: 600;
+    border: 1.5px solid var(--accent); background: transparent; color: var(--accent); }
+  .sync-acts #sync-push { background: var(--accent); color: var(--panel); }
+  .sync-acts #sync-close { border-color: var(--panel-line); color: var(--ink-soft); }
   .backup-nudge { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
     z-index: 12; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     justify-content: center; max-width: min(92vw, 560px); padding: 10px 14px;
@@ -506,15 +529,12 @@
         <button id="set-sound" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M16 9l5 5M21 9l-5 5"/></svg> Sound</button>
         <button id="set-style"><svg class="bi" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Customize character</button>
         <button id="set-key"><svg class="bi" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Claude API key</button>
-        <button id="set-notify" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg> Birthday alerts</button>
         <button id="set-sync"><svg class="bi" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg> Sync via GitHub Gist</button>
         <button id="set-export"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export forest data</button>
-        <button id="set-import"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Import forest data</button>
         <button id="set-source"><svg class="bi" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg> Source on GitHub — fork your own</button>
         <button id="set-delete" class="danger-btn"><svg class="bi" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg> Delete this forest</button>
         <button id="set-kofi" class="kofi-btn"><svg class="bi" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Support this project</button>
       </div>
-      <input type="file" id="import-file" accept=".json,application/json" style="display:none">
     </div>
   </div>
 
@@ -4707,94 +4727,82 @@
   // durable storage: stops iOS/Chrome from auto-evicting the forest during cleanup
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   setTimeout(backupNudge, 2500);
-  const notifyBtn = document.getElementById("set-notify");
-  notifyBtn.setAttribute("aria-pressed", String(!!localStorage.getItem("ff-notify")));
-  notifyBtn.addEventListener("click", () => {
-    if (localStorage.getItem("ff-notify")) {
-      localStorage.removeItem("ff-notify");
-      notifyBtn.setAttribute("aria-pressed", "false");
-      toast("birthday alerts off");
-      return;
-    }
-    if (!("Notification" in window)) { toast("this browser can't do notifications"); return; }
-    Notification.requestPermission().then(perm => {
-      if (perm !== "granted") { toast("notifications blocked by the browser"); return; }
-      localStorage.setItem("ff-notify", "1");
-      notifyBtn.setAttribute("aria-pressed", "true");
-      toast("you'll get a nudge when you open the forest");
-      forestNudge(true);
-    });
-  });
-  function forestNudge(force) {
-    // fires at most once a day, when the forest is opened (no server = no push)
-    if (!localStorage.getItem("ff-notify") || Notification.permission !== "granted") return;
-    const today = todayStr();
-    if (!force && localStorage.getItem("ff-notified") === today) return;
-    const bd = PEOPLE.filter(p => p._bdayDays != null && p._bdayDays <= 3)
-      .map(p => firstName(p) + (p._bdayDays === 0 ? " — TODAY!" : " in " + p._bdayDays + "d"));
-    const quiet = PEOPLE.filter(p => p.reconnect === "priority").length;
-    const bits = [];
-    if (bd.length) bits.push("Birthdays: " + bd.join(", "));
-    if (quiet) bits.push(quiet + " close friend" + (quiet > 1 ? "s" : "") + " could use watering");
-    if (!bits.length) return;
-    localStorage.setItem("ff-notified", today);
-    try { new Notification("Friend Forest", { body: bits.join("\n"), icon: "icons/icon-192.png" }); }
-    catch (e) {}
-  }
-  setTimeout(() => forestNudge(false), 2500);
 
-  /* ---- cross-device sync via a secret GitHub Gist (user's own token) ---- */
-  async function gistConfig() {
-    let token = localStorage.getItem("ff-gist-token");
-    if (!token) {
-      token = window.prompt(
-        "GitHub token with the 'gist' scope (github.com/settings/tokens — stored only in this browser):");
-      if (!token) return null;
-      localStorage.setItem("ff-gist-token", token.trim());
-    }
-    return localStorage.getItem("ff-gist-token");
-  }
-  async function gistSync() {
-    const token = await gistConfig(); if (!token) return;
-    const headers = { authorization: "Bearer " + token,
-      accept: "application/vnd.github+json", "content-type": "application/json" };
-    const id = localStorage.getItem("ff-gist-id");
-    const choice = window.prompt(
-      "Sync: type PUSH to upload this forest" + (id ? ", PULL to download the synced one" : "") +
-      ", or paste a gist id from another device:", "PUSH");
-    if (!choice) return;
-    try {
-      if (/^push$/i.test(choice)) {
+  /* ---- cross-device sync via a secret GitHub Gist (user's own token) ----
+     an in-page dialog, not window.prompt: prompt() is silently swallowed in
+     installed PWAs, which made the old Sync button look dead */
+  function syncDialog() {
+    closeAllPopups("none");
+    const wrap = document.createElement("div");
+    wrap.className = "sync-modal";
+    const gid = localStorage.getItem("ff-gist-id") || "";
+    wrap.innerHTML = '<div class="sync-card">' +
+      '<h3>Sync via GitHub Gist</h3>' +
+      '<p>Your forest saves to a <b>private gist</b> on your GitHub account. ' +
+      'Push from one device, pull from another. Nothing touches any other server.</p>' +
+      '<label>GitHub token <span>(needs the "gist" scope — github.com/settings/tokens, stored only in this browser)</span></label>' +
+      '<input id="sync-token" type="password" autocomplete="off" placeholder="ghp_..." value="' +
+        esc(localStorage.getItem("ff-gist-token") || "") + '">' +
+      '<label>Gist id <span>(filled in for you after the first push — paste one here to pull from another device)</span></label>' +
+      '<input id="sync-id" autocomplete="off" placeholder="e.g. 8f3c0a..." value="' + esc(gid) + '">' +
+      '<div class="sync-status" id="sync-status"></div>' +
+      '<div class="sync-acts">' +
+      '<button id="sync-push">Push this forest</button>' +
+      '<button id="sync-pull">Pull from gist</button>' +
+      '<button id="sync-close">Close</button></div></div>';
+    document.body.appendChild(wrap);
+    const $ = id => document.getElementById(id);
+    const status = (msg, bad) => { $("sync-status").textContent = msg;
+      $("sync-status").classList.toggle("bad", !!bad); };
+    const close = () => wrap.remove();
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    $("sync-close").addEventListener("click", close);
+    const creds = () => {
+      const token = $("sync-token").value.trim();
+      if (!token) { status("paste a GitHub token first", true); $("sync-token").focus(); return null; }
+      localStorage.setItem("ff-gist-token", token);
+      return { authorization: "Bearer " + token,
+        accept: "application/vnd.github+json", "content-type": "application/json" };
+    };
+    $("sync-push").addEventListener("click", async () => {
+      const headers = creds(); if (!headers) return;
+      const id = $("sync-id").value.trim();
+      status("pushing\u2026");
+      try {
         const body = { description: "Friend Forest data (private)", public: false,
           files: { "friend-forest.json": { content: JSON.stringify(exportForest(), null, 1) } } };
         const res = await fetch("https://api.github.com/gists" + (id ? "/" + id : ""),
           { method: id ? "PATCH" : "POST", headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error("GitHub " + res.status);
+        if (!res.ok) throw new Error("GitHub said " + res.status +
+          (res.status === 401 ? " \u2014 bad token?" : res.status === 404 ? " \u2014 gist id not found" : ""));
         const j = await res.json();
         localStorage.setItem("ff-gist-id", j.id);
-        window.prompt("Forest pushed! On another device, choose Sync and paste this gist id:", j.id);
-      } else {
-        const useId = /^pull$/i.test(choice) ? id : choice.trim();
-        if (!useId) { toast("no gist id yet — PUSH from the device that has your forest"); return; }
+        $("sync-id").value = j.id;
+        status("pushed! paste this gist id on your other device: " + j.id);
+      } catch (e) { status("push failed: " + e.message, true); }
+    });
+    $("sync-pull").addEventListener("click", async () => {
+      const headers = creds(); if (!headers) return;
+      const useId = $("sync-id").value.trim();
+      if (!useId) { status("no gist id \u2014 push from the device that has your forest first", true); return; }
+      status("pulling\u2026");
+      try {
         const res = await fetch("https://api.github.com/gists/" + useId, { headers });
-        if (!res.ok) throw new Error("GitHub " + res.status);
+        if (!res.ok) throw new Error("GitHub said " + res.status +
+          (res.status === 401 ? " \u2014 bad token?" : res.status === 404 ? " \u2014 gist id not found" : ""));
         const j = await res.json();
         const file = j.files && j.files["friend-forest.json"];
         if (!file) throw new Error("that gist has no friend-forest.json");
         const data = JSON.parse(file.content);
         if (!Array.isArray(data.people)) throw new Error("not a forest file");
-        if (!window.confirm("Replace this browser's forest with " + data.people.length +
-          " people from the synced gist?")) return;
         localStorage.setItem("ff-gist-id", useId);
         localStorage.setItem("ff-data", JSON.stringify(data));
-        location.reload();
-      }
-    } catch (e) {
-      if (String(e).includes("401")) localStorage.removeItem("ff-gist-token");
-      toast("sync failed: " + e.message);
-    }
+        status("pulled " + data.people.length + " people \u2014 replanting\u2026");
+        setTimeout(() => location.reload(), 900);
+      } catch (e) { status("pull failed: " + e.message, true); }
+    });
   }
-  document.getElementById("set-sync").addEventListener("click", gistSync);
+  document.getElementById("set-sync").addEventListener("click", syncDialog);
   document.getElementById("set-source").addEventListener("click", () =>
     window.open("https://github.com/loloHey123/friendship-forest", "_blank", "noopener"));
   document.getElementById("set-kofi").addEventListener("click", () =>
@@ -4838,19 +4846,6 @@
       { type: "application/json" }));
     a.click();
     toast(DEMO_MODE ? "exported the demo forest" : "forest exported — feed it to the bot!");
-  });
-  document.getElementById("set-import").addEventListener("click", () =>
-    document.getElementById("import-file").click());
-  document.getElementById("import-file").addEventListener("change", e => {
-    const file = e.target.files[0]; if (!file) return;
-    file.text().then(text => {
-      const j = JSON.parse(text);
-      if (!Array.isArray(j.people) || !j.people.length) throw new Error("no people[] found");
-      if (!window.confirm("Replace this browser's forest with " + j.people.length +
-        " people from " + file.name + "?")) return;
-      localStorage.setItem("ff-data", JSON.stringify(j));
-      location.reload();
-    }).catch(err => toast("couldn't import: " + err.message));
   });
   document.getElementById("set-grave").addEventListener("click", () => {
     const pn = document.getElementById("grave-panel");
@@ -5153,7 +5148,7 @@
       note.remove(); };
     document.getElementById("nudge-dl").addEventListener("click", () => {
       document.getElementById("set-export").click(); done(); });
-    document.getElementById("nudge-sync").addEventListener("click", () => { done(); gistSync(); });
+    document.getElementById("nudge-sync").addEventListener("click", () => { done(); syncDialog(); });
     document.getElementById("nudge-x").addEventListener("click", done);
   }
   function saveForest() {
