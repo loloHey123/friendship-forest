@@ -48,7 +48,8 @@
     background: linear-gradient(160deg, #dff0be, #a8d476); }
   @media (prefers-color-scheme: dark) { .illus { background: linear-gradient(160deg, #22301a, #16220f); } }
   :root[data-theme="dark"] .illus { background: linear-gradient(160deg, #22301a, #16220f); }
-  .illus canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .illus canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated;
+    object-fit: cover; object-position: center bottom; }
   @media (max-width: 980px) { .illus { display: none; } }
 
   .brandrow { display: flex; align-items: center; justify-content: space-between;
@@ -57,6 +58,13 @@
     font-size: 19px; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
   .wordmark .mark { width: 30px; height: 30px; border-radius: 9px; background: var(--lime);
     background-image: url(icons/icon-192.png); background-size: cover; image-rendering: pixelated; }
+  a.btn { text-decoration: none; display: inline-block; }
+  .btn.demo-btn { border: 1.5px solid var(--green); color: var(--green); font-weight: 800; }
+  .btn.demo-btn:hover { background: var(--green); color: var(--app); }
+  @media (prefers-color-scheme: dark) { .btn.demo-btn { border-color: var(--lime); color: var(--lime); }
+    .btn.demo-btn:hover { background: var(--lime); color: var(--green-dark); } }
+  :root[data-theme="dark"] .btn.demo-btn { border-color: var(--lime); color: var(--lime); }
+  :root[data-theme="dark"] .btn.demo-btn:hover { background: var(--lime); color: var(--green-dark); }
   .forestlink { font-size: 13px; font-weight: 700; color: var(--green);
     text-decoration: none; padding: 9px 16px; border-radius: 999px;
     border: 1.5px solid var(--line); }
@@ -127,6 +135,10 @@
   ol.howto b { font-weight: 800; }
   .hint { font-size: 12px; color: var(--ink-soft); line-height: 1.6; margin-top: 12px;
     font-weight: 500; }
+  .hint a.src { color: var(--green); font-weight: 700; text-decoration-color: var(--lime-deep); }
+  .hint a.src:hover { color: var(--lime-deep); }
+  @media (prefers-color-scheme: dark) { .hint a.src { color: var(--lime); } }
+  :root[data-theme="dark"] .hint a.src { color: var(--lime); }
 
   .drop { display: block; margin-top: 16px; border: 2px dashed var(--line);
     border-radius: 20px; padding: 30px 18px; text-align: center; cursor: pointer;
@@ -179,11 +191,18 @@
     text-transform: uppercase; color: var(--ink-soft); }
 
   .rocket { font-size: 42px; margin: 0 0 8px; }
-  .privacy { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px;
-    background: var(--strip); border-radius: 18px; padding: 14px 16px;
-    font-size: 13px; line-height: 1.55; color: var(--ink-soft); font-weight: 500;
+  .privacy { display: flex; gap: 12px; align-items: flex-start; margin-top: 18px;
+    background: color-mix(in srgb, var(--lime) 16%, transparent);
+    border: 2px solid var(--lime-deep); border-radius: 18px; padding: 16px 18px;
+    font-size: 15px; line-height: 1.6; color: var(--ink); font-weight: 600;
     max-width: 56ch; }
-  .privacy b { color: var(--ink); }
+  .privacy::before { content: ""; flex-shrink: 0; width: 26px; height: 26px; margin-top: 1px;
+    background-color: var(--green);
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>') center / contain no-repeat; }
+  @media (prefers-color-scheme: dark) { .privacy::before { background-color: var(--lime); } }
+  :root[data-theme="dark"] .privacy::before { background-color: var(--lime); }
+  .privacy b { display: block; font-size: 17px; font-weight: 800; margin-bottom: 2px; }
 
 
   /* upload feedback: reading bar, then a solid check state */
@@ -244,7 +263,6 @@
 <div class="content">
   <div class="brandrow">
     <a class="wordmark" href="#"><span class="mark"></span>Friend Forest</a>
-    <a class="forestlink" href="forest.html" target="_blank" rel="noopener">see the demo forest →</a>
   </div>
   <div class="progress-zone" id="progress-zone">
     <div class="progress" id="progress"></div>
@@ -258,17 +276,20 @@
       close friendships grow tall, and the ones drifting away turn autumn and ask for
       a little water. Walk around it like a farming game.
       <strong>Remember everyone.</strong></p>
-    <div class="privacy"><span><b>Your people stay yours.</b> Everything is parsed and
-      stored on this device. Contacts and messages never touch a server, and you can
-      delete everything whenever you like.</span></div>
-    <div class="grow-space"></div>
-    <div class="btnrow">
+    <div class="privacy"><span><b>Your people stay yours — nothing is sent to us. Ever.</b>
+      There is no server and no account: everything is parsed and stored on this device
+      only, and you can delete it all whenever you like.</span></div>
+    <div class="btnrow" style="margin-top:18px">
+      <a class="btn demo-btn" href="forest.html" target="_blank" rel="noopener">See the demo forest →</a>
       <button class="btn primary" data-next>Start planting</button>
-      <button class="btn" id="restore-btn">Restore a saved forest</button>
+    </div>
+    <div class="btnrow" style="margin-top:10px">
+      <button class="btn ghost" id="restore-btn">Restore a saved forest</button>
       <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
     </div>
     <p class="hint" id="restore-err" style="display:none;color:#c94f4f"></p>
-    <p class="hint">Free and open source — <a href="https://github.com/loloHey123/friendship-forest"
+    <div class="grow-space"></div>
+    <p class="hint">Free and open source — <a class="src" href="https://github.com/loloHey123/friendship-forest"
       target="_blank" rel="noopener">read the code, fork it, run your own</a>.
       <a class="kofi" href="https://ko-fi.com/lauragao" target="_blank" rel="noopener">&#9825; Support this project</a></p>
   </section>
@@ -505,7 +526,7 @@
   const state = { name: "", city: "", contacts: [], linkedin: [], messages: [],
     whatsapp: [], social: [], manual: [], ai: false, key: "" };
   let step = 0;
-  const TOTAL = 8; // steps 1..8 shown in the dash meter
+  const TOTAL = 4; // name / sources / field guide / plant
 
   /* progress survives leaving: everything but the API key is drafted to this browser */
   function saveDraft() {
@@ -521,7 +542,9 @@
     const zone = document.getElementById("progress-zone");
     if (step === 0) { zone.style.visibility = "hidden"; return; }
     zone.style.visibility = "visible";
-    const disp = step > 8 ? 2 : Math.min(step, TOTAL);   // by-hand / whatsapp are part of "sources"
+    // all data-source pages (hub + contacts/linkedin/messages/whatsapp/social/by-hand)
+    // are one "sources" step; 7 = field guide, 8 = plant
+    const disp = step === 1 ? 1 : step === 7 ? 3 : step === 8 ? 4 : 2;
     document.getElementById("progress").innerHTML =
       Array.from({ length: TOTAL }, (_, i) =>
         '<div class="dash ' + (i < disp - 1 ? "done" : i === disp - 1 ? "now" : "") + '"></div>'
