@@ -257,6 +257,8 @@
     <div class="btnrow">
       <button class="btn primary" data-next>Start planting</button>
     </div>
+    <p class="hint">Free and open source — <a href="https://github.com/loloHey123/friendship-forest"
+      target="_blank" rel="noopener">read the code, fork it, run your own</a>.</p>
   </section>
 
   <!-- STEP 1 · you -->
@@ -1189,9 +1191,10 @@
     document.getElementById("final-lead").textContent = people.length
       ? "Here's what your forest will grow from:"
       : "Go back and add at least one source — or explore the demo forest and come back later.";
-    document.getElementById("grow-note").textContent = state.ai
-      ? "Claude will write short profiles while your forest grows."
-      : "You can re-run any step later. Forests love compost.";
+    document.getElementById("grow-note").textContent = (state.ai
+      ? "Claude will write short profiles while your forest grows. "
+      : "You can re-run any step later. ") +
+      "Your forest is saved to this browser only — grab a backup from Settings once it's grown.";
   }
   document.getElementById("grow").addEventListener("click", async () => {
     const btn = document.getElementById("grow");
@@ -1208,6 +1211,8 @@
         fails + " profile" + (fails > 1 ? "s" : "") +
         " couldn't be written (API errors) — your forest grows anyway.";
     }
+    // ask the browser to never auto-evict this site's storage (iOS/Chrome cleanup)
+    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
     try {
       localStorage.setItem("ff-data", JSON.stringify(data));
     } catch (e) {
