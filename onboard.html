@@ -205,10 +205,14 @@
     border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
     cursor: pointer; }
   .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
-  a.kofi { display: inline-block; margin-left: 8px; padding: 3px 12px; border-radius: 999px;
-    border: 1.5px solid var(--line); color: var(--ink-soft); text-decoration: none;
-    font-weight: 700; transition: all .15s; }
-  a.kofi:hover { border-color: #e0608a; color: #e0608a; transform: translateY(-1px); }
+  a.kofi { display: inline-block; margin-left: 8px; padding: 4px 14px; border-radius: 999px;
+    border: 1.5px solid var(--gold); color: #9a7414; text-decoration: none;
+    font-weight: 800; background: color-mix(in srgb, var(--gold) 14%, transparent);
+    transition: all .15s; }
+  a.kofi:hover { background: var(--gold); color: #3d2f05; transform: translateY(-1px);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--gold) 50%, transparent); }
+  @media (prefers-color-scheme: dark) { a.kofi { color: var(--gold); } }
+  :root[data-theme="dark"] a.kofi { color: var(--gold); }
   .mtable { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
   .mtable th { text-align: left; font-size: 11px; letter-spacing: .1em;
     text-transform: uppercase; color: var(--ink-soft); padding: 0 8px 6px; font-weight: 800; }
@@ -260,7 +264,10 @@
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-next>Start planting</button>
+      <button class="btn" id="restore-btn">Restore a saved forest</button>
+      <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
     </div>
+    <p class="hint" id="restore-err" style="display:none;color:#c94f4f"></p>
     <p class="hint">Free and open source — <a href="https://github.com/loloHey123/friendship-forest"
       target="_blank" rel="noopener">read the code, fork it, run your own</a>.
       <a class="kofi" href="https://ko-fi.com/lauragao" target="_blank" rel="noopener">&#9825; Support this project</a></p>
@@ -1229,6 +1236,26 @@
     try { localStorage.removeItem("ff-draft"); } catch (e) {}
     btn.textContent = "Forest planted — opening it now";
     window.location.href = "forest.html";
+  });
+
+  /* restore: replant from an exported friend-forest.json backup */
+  document.getElementById("restore-btn").addEventListener("click", () =>
+    document.getElementById("restore-file").click());
+  document.getElementById("restore-file").addEventListener("change", e => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    const err = document.getElementById("restore-err");
+    file.text().then(text => {
+      const j = JSON.parse(text);
+      if (!Array.isArray(j.people) || !j.people.length) throw new Error("no people[] in that file");
+      localStorage.setItem("ff-data", JSON.stringify(j));
+      try { localStorage.removeItem("ff-draft"); } catch (e2) {}
+      window.location.href = "forest.html";
+    }).catch(ex => {
+      err.textContent = "Couldn't restore from " + file.name + " \u2014 " + ex.message +
+        ". Use a backup exported from Settings \u2192 Export forest data.";
+      err.style.display = "";
+    });
   });
 
   renderProgress();
