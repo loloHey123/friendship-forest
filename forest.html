@@ -197,6 +197,9 @@
   .sync-card label { display: block; font-family: var(--mono); font-size: 10px;
     letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 10px 0 4px; }
   .sync-card label span { text-transform: none; letter-spacing: 0; opacity: .8; }
+  .sync-card select { width: 100%; box-sizing: border-box; font: 13px var(--mono);
+    padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--panel-line);
+    background: var(--panel); color: var(--ink); }
   .sync-card input { width: 100%; box-sizing: border-box; font: 13px var(--mono);
     padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--panel-line);
     background: transparent; color: var(--ink); }
@@ -542,7 +545,8 @@
         <button id="set-grave"><svg class="bi" viewBox="0 0 24 24"><path d="M6 21V9a6 6 0 0 1 12 0v12M4 21h16M10 11h4"/></svg> Tree graveyard</button>
         <button id="set-sound" aria-pressed="false"><svg class="bi" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M16 9l5 5M21 9l-5 5"/></svg> Sound</button>
         <button id="set-style"><svg class="bi" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Customize character</button>
-        <button id="set-key"><svg class="bi" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Claude API key</button>
+        <button id="set-key"><svg class="bi" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> AI API key</button>
+        <button id="set-add"><svg class="bi" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add more sources</button>
         <button id="set-sync"><svg class="bi" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg> Sync via GitHub Gist</button>
         <button id="set-export"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export forest data</button>
         <button id="set-source"><svg class="bi" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg> Source on GitHub — fork your own</button>
@@ -4822,6 +4826,10 @@
     });
   }
   document.getElementById("set-sync").addEventListener("click", syncDialog);
+  document.getElementById("set-add").addEventListener("click", () => {
+    if (DEMO_MODE) { toast("plant your own forest first — this is the demo"); return; }
+    window.location.href = "onboard.html#add";
+  });
   document.getElementById("set-source").addEventListener("click", () =>
     window.open("https://github.com/loloHey123/friendship-forest", "_blank", "noopener"));
   document.getElementById("set-kofi").addEventListener("click", () =>
@@ -4882,12 +4890,18 @@
     wrap.setAttribute("role", "dialog");
     wrap.setAttribute("aria-modal", "true");
     wrap.setAttribute("aria-label", "Claude API key");
+    const curProv = localStorage.getItem("ff-key-provider") || "anthropic";
     wrap.innerHTML = '<div class="sync-card">' +
-      '<h3>Claude API key</h3>' +
+      '<h3>AI API key</h3>' +
       '<p>Powers AI answers in search. Stored only in this browser\u2019s localStorage ' +
-      'and sent only to Anthropic. Leave empty and save to clear it.</p>' +
+      'and sent only to the provider you pick. Leave empty and save to clear it.</p>' +
+      '<label for="key-provider">Provider</label>' +
+      '<select id="key-provider">' +
+      [["anthropic", "Claude (Anthropic)"], ["openai", "GPT (OpenAI)"], ["gemini", "Gemini (Google)"]]
+        .map(o => '<option value="' + o[0] + '"' + (curProv === o[0] ? " selected" : "") + '>' +
+          o[1] + '</option>').join("") + '</select>' +
       '<label for="key-input">API key</label>' +
-      '<input id="key-input" type="password" autocomplete="off" placeholder="sk-ant-\u2026" value="' +
+      '<input id="key-input" type="password" autocomplete="off" placeholder="paste your key\u2026" value="' +
         esc(localStorage.getItem("ff-key") || "") + '">' +
       '<div class="sync-acts">' +
       '<button id="key-save">Save</button>' +
@@ -4900,8 +4914,9 @@
     $("key-cancel").addEventListener("click", close);
     $("key-save").addEventListener("click", () => {
       const k = $("key-input").value.trim();
-      if (k) { localStorage.setItem("ff-key", k); toast("Claude connected"); }
-      else { localStorage.removeItem("ff-key"); toast("Claude key cleared"); }
+      localStorage.setItem("ff-key-provider", $("key-provider").value);
+      if (k) { localStorage.setItem("ff-key", k); toast("AI connected"); }
+      else { localStorage.removeItem("ff-key"); toast("AI key cleared"); }
       close();
     });
     $("key-input").focus();
@@ -5657,37 +5672,58 @@
   }
   async function runAskClaude(q) {
     const key = localStorage.getItem("ff-key");
+    const provider = localStorage.getItem("ff-key-provider") || "anthropic";
     if (!key) {
-      askAns.innerHTML = '<p class="ans-lead">Connect Claude first — Settings (gear) → ' +
-        '<b>Claude API key</b>. Your key stays in this browser; calls go straight to Anthropic.</p>';
+      askAns.innerHTML = '<p class="ans-lead">Connect an AI first — Settings (gear) → ' +
+        '<b>AI API key</b>. Your key stays in this browser; calls go straight to the provider.</p>';
       return;
     }
-    askAns.innerHTML = '<p class="ans-lead">✦ Claude is thinking…</p>';
+    askAns.innerHTML = '<p class="ans-lead">✦ thinking…</p>';
     try {
       const who = (DATA.gardener && DATA.gardener.name) || "the user";
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-opus-5",
-          max_tokens: 4096,
-          messages: [{ role: "user", content:
-            "You are the friendly spirit of " + who + "'s friend forest — a personal " +
-            "friendship CRM. Below is one line per friend. Answer the question warmly and " +
-            "briefly (a short paragraph or a short list), grounded ONLY in this data. " +
-            "If the data can't answer it, say so.\n\n" + forestContext() +
-            "\n\nQuestion: " + q }],
-        }),
-      });
-      if (!res.ok) throw new Error("API " + res.status + (res.status === 401 ? " — check your key" : ""));
-      const msg = await res.json();
-      if (msg.stop_reason === "refusal") throw new Error("Claude declined this question");
-      const text = (msg.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+      const prompt =
+        "You are the friendly spirit of " + who + "'s friend forest — a personal " +
+        "friendship CRM. Below is one line per friend. Answer the question warmly and " +
+        "briefly (a short paragraph or a short list), grounded ONLY in this data. " +
+        "If the data can't answer it, say so.\n\n" + forestContext() +
+        "\n\nQuestion: " + q;
+      let text;
+      if (provider === "openai") {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: "Bearer " + key },
+          body: JSON.stringify({ model: "gpt-5.1", max_completion_tokens: 4096,
+            messages: [{ role: "user", content: prompt }] }),
+        });
+        if (!res.ok) throw new Error("API " + res.status + (res.status === 401 ? " — check your key" : ""));
+        text = (await res.json()).choices[0].message.content;
+      } else if (provider === "gemini") {
+        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
+          "gemini-2.5-flash:generateContent?key=" + encodeURIComponent(key), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        });
+        if (!res.ok) throw new Error("API " + res.status + (res.status === 400 ? " — check your key" : ""));
+        const g = await res.json();
+        text = g.candidates[0].content.parts.map(pt => pt.text).join("");
+      } else {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({ model: "claude-opus-5", max_tokens: 4096,
+            messages: [{ role: "user", content: prompt }] }),
+        });
+        if (!res.ok) throw new Error("API " + res.status + (res.status === 401 ? " — check your key" : ""));
+        const msg = await res.json();
+        if (msg.stop_reason === "refusal") throw new Error("Claude declined this question");
+        text = (msg.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+      }
       askAns.innerHTML = '<div class="ans-card"><div class="ans-snip">' +
         esc(text).replace(/\n/g, "<br>") + '</div></div>';
     } catch (e) {
