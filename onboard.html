@@ -8,7 +8,7 @@
 <style>
   :root {
     --page: #cfe3a8; --frame: #242b20; --app: #ffffff;
-    --ink: #232a20; --ink-soft: #6b7565;
+    --ink: #232a20; --ink-soft: #5d675a;
     --lime: #b9e380; --lime-deep: #8fc653; --green: #3f6d34; --green-dark: #234a1e;
     --strip: #f4f5f0; --card: #ffffff; --line: #e4e7dd;
     --gold: #f0b429; --water: #58a8d6; --rose: #e86f9e;
@@ -124,10 +124,12 @@
   .tag { font-family: var(--mono); font-size: 9.5px; font-weight: 700;
     padding: 3px 10px; border-radius: 999px; letter-spacing: .03em; }
   .tag.fast { background: var(--lime); color: var(--green-dark); }
-  .tag.wait { background: color-mix(in srgb, var(--gold) 22%, transparent); color: #9a7414; }
+  .tag.wait { background: color-mix(in srgb, var(--gold) 24%, transparent); color: #6b4f0a; }
   @media (prefers-color-scheme: dark) { .tag.wait { color: var(--gold); } }
   :root[data-theme="dark"] .tag.wait { color: var(--gold); }
-  .tag.mac { background: color-mix(in srgb, var(--water) 18%, transparent); color: var(--water); }
+  .tag.mac { background: color-mix(in srgb, var(--water) 20%, transparent); color: #1c6390; }
+  @media (prefers-color-scheme: dark) { .tag.mac { color: #8fd4f5; } }
+  :root[data-theme="dark"] .tag.mac { color: #8fd4f5; }
 
   ol.howto { margin: 8px 0 4px; padding-left: 24px; font-size: 15px; line-height: 1.9;
     font-weight: 500; }
@@ -135,6 +137,10 @@
   ol.howto b { font-weight: 800; }
   .hint { font-size: 12px; color: var(--ink-soft); line-height: 1.6; margin-top: 12px;
     font-weight: 500; }
+  .hint.warn { font-size: 13.5px; color: var(--ink); font-weight: 600; max-width: 58ch;
+    background: color-mix(in srgb, var(--gold) 16%, transparent);
+    border: 1.5px solid var(--gold); border-radius: 12px; padding: 10px 14px; }
+  .subsrc { font-size: 17px; margin: 26px 0 2px; }
   .hint a.src { color: var(--green); font-weight: 700; text-decoration-color: var(--lime-deep); }
   .hint a.src:hover { color: var(--lime-deep); }
   @media (prefers-color-scheme: dark) { .hint a.src { color: var(--lime); } }
@@ -225,7 +231,7 @@
     cursor: pointer; }
   .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
   a.kofi { display: inline-block; margin-left: 8px; padding: 4px 14px; border-radius: 999px;
-    border: 1.5px solid var(--gold); color: #9a7414; text-decoration: none;
+    border: 1.5px solid var(--gold); color: #6b4f0a; text-decoration: none;
     font-weight: 800; background: color-mix(in srgb, var(--gold) 14%, transparent);
     transition: all .15s; }
   a.kofi:hover { background: var(--gold); color: #3d2f05; transform: translateY(-1px);
@@ -264,7 +270,7 @@
   <div class="brandrow">
     <a class="wordmark" href="#"><span class="mark"></span>Friend Forest</a>
   </div>
-  <div class="progress-zone" id="progress-zone">
+  <div class="progress-zone" id="progress-zone" aria-live="polite">
     <div class="progress" id="progress"></div>
     <div class="steplabel" id="steplabel"></div>
   </div>
@@ -287,7 +293,7 @@
       <button class="btn ghost" id="restore-btn">Restore a saved forest</button>
       <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
     </div>
-    <p class="hint" id="restore-err" style="display:none;color:#c94f4f"></p>
+    <p class="hint" id="restore-err" role="alert" style="display:none;color:#c94f4f"></p>
     <div class="grow-space"></div>
     <p class="hint">Free and open source — <a class="src" href="https://github.com/loloHey123/friendship-forest"
       target="_blank" rel="noopener">read the code, fork it, run your own</a>.
@@ -315,30 +321,37 @@
     <h2>Where should your<br>forest grow from?</h2>
     <p class="lead">Pick a source to open it. <strong>Start with the quick one</strong> —
       your forest sprouts today. The slower ones make it richer whenever they arrive.</p>
+    <div class="privacy"><span><b>Everything you drop here stays on this device — we never
+      see, keep or store any of it.</b> There is no server and no account: your files are
+      read by this page and saved only in this browser. The flip side: <em>we can't recover
+      anything for you.</em> Clearing this browser's site data deletes your forest, and other
+      browsers or devices won't see it. Your options: download a backup file, sync to a
+      private GitHub Gist on your own account (both in Settings once the forest is grown),
+      or fork the open-source code and host it yourself.</span></div>
     <div class="cardstrip">
-      <button class="card" data-goto="3"><span class="badge">✓</span><span class="go" id="hub-c">open →</span>
+      <button class="card" data-goto="3"><span class="badge" aria-hidden="true">✓</span><span class="go" id="hub-c">open →</span>
         <h3>Contacts <span class="tag fast">2 min · start here</span></h3>
         <p>Names, numbers, birthdays, jobs. The skeleton of your forest.</p></button>
-      <button class="card" data-goto="4"><span class="badge">✓</span><span class="go" id="hub-l">open →</span>
-        <h3>LinkedIn <span class="tag wait">~24h email wait</span></h3>
-        <p>Jobs, companies, cities. Fills in "wait, what does she do again?"</p></button>
-      <button class="card" data-goto="6"><span class="badge">✓</span><span class="go" id="hub-m">open →</span>
+      <button class="card" data-goto="6"><span class="badge" aria-hidden="true">✓</span><span class="go" id="hub-m">open →</span>
         <h3>iMessage <span class="tag mac">Mac only</span></h3>
         <p>Your real texting history. It's what makes trees feel alive.</p></button>
-      <button class="card" data-goto="10"><span class="badge">✓</span><span class="go" id="hub-w">open →</span>
-        <h3>WhatsApp <span class="tag fast">a few minutes</span></h3>
-        <p>Export your favorite chats. Texting history for everyone else.</p></button>
-      <button class="card" data-goto="11"><span class="badge">✓</span><span class="go" id="hub-s">open →</span>
-        <h3>Social media <span class="tag wait">export wait varies</span></h3>
-        <p>Instagram, Facebook, X and friends. Who you follow, and who you actually message.</p></button>
-      <button class="card" data-goto="9"><span class="badge">✓</span><span class="go" id="hub-h">open →</span>
+      <button class="card" data-goto="11"><span class="badge" aria-hidden="true">✓</span><span class="go" id="hub-s">open →</span>
+        <h3>Social media <span class="tag wait">WhatsApp · Instagram · LinkedIn…</span></h3>
+        <p>WhatsApp chats, Instagram, Facebook, X, LinkedIn. Who you know, and who you actually talk to.</p></button>
+      <button class="card" data-goto="9"><span class="badge" aria-hidden="true">✓</span><span class="go" id="hub-h">open →</span>
         <h3>By hand <span class="tag fast">always works</span></h3>
         <p>No exports needed. Type friends in one at a time, starting with your favorites.</p></button>
     </div>
+    <p class="hint warn" id="history-warn" role="status" style="display:none"><b>No message history yet.</b>
+      Contacts alone make a flat forest: without iMessage, WhatsApp or social messages,
+      trees can't grow with closeness, glow for reconnecting, or cluster by who you
+      actually talk to — everyone ends up the same size.</p>
+    <p class="hint warn" id="empty-warn" role="alert" style="display:none"><b>Nothing collected yet.</b>
+      Add at least one source — or plant a few friends by hand — before moving on.</p>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn" data-back>Back</button>
-      <button class="btn primary" data-goto="7">I'm done collecting</button>
+      <button class="btn primary" id="done-collecting">I'm done collecting</button>
     </div>
   </section>
 
@@ -363,24 +376,6 @@
     </div>
   </section>
 
-  <!-- STEP 4 · linkedin -->
-  <section class="step" data-step="4">
-    <h2>Request your LinkedIn export<br>(then forget about it)</h2>
-    <ol class="howto">
-      <li>LinkedIn → <b>Settings → Data privacy → Get a copy of your data</b></li>
-      <li>Choose the <b>larger archive</b> → Request</li>
-      <li>The email arrives in about a day. Come back and drop <b>Connections.csv</b> here</li>
-    </ol>
-    <label class="drop" id="drop-linkedin">
-      <span id="drop-linkedin-txt">Already have it? Drop <b>Connections.csv</b> here</span>
-      <input type="file" accept=".csv,text/csv" multiple>
-    </label>
-    <p class="hint">No file yet? That's normal. Your progress is saved, so come back and drop it any time.</p>
-    <div class="grow-space"></div>
-    <div class="btnrow">
-      <button class="btn primary" data-goto="2">Back to sources</button>
-    </div>
-  </section>
 
   <!-- STEP 6 · messages -->
   <section class="step" data-step="6">
@@ -432,24 +427,6 @@
     </div>
   </section>
 
-  <!-- STEP 10 · whatsapp -->
-  <section class="step" data-step="10">
-    <h2>Export a few<br>WhatsApp chats</h2>
-    <ol class="howto">
-      <li>Open a chat → tap the name → <b>Export chat</b> → <b>Without media</b></li>
-      <li>Save / AirDrop the <b>.txt</b> to this device (unzip if needed)</li>
-      <li>Repeat for your favorite people, then drop them all below</li>
-    </ol>
-    <label class="drop" id="drop-whatsapp">
-      <span id="drop-whatsapp-txt">Drop <b>WhatsApp Chat with ….txt</b> files here — several at once is fine</span>
-      <input type="file" accept=".txt,text/plain" multiple>
-    </label>
-    <p class="hint">Only message counts and dates are used, never the messages themselves.</p>
-    <div class="grow-space"></div>
-    <div class="btnrow">
-      <button class="btn primary" data-goto="2">Back to sources</button>
-    </div>
-  </section>
 
   <!-- STEP 11 · social media -->
   <section class="step" data-step="11">
@@ -474,6 +451,24 @@
     <p class="hint">Unzip the export first and drop the files inside. Only names, counts and
       dates are read — never the messages themselves, and nothing leaves this browser.</p>
     <div id="social-list"></div>
+    <h3 class="subsrc">WhatsApp chats</h3>
+    <ol class="howto">
+      <li>Open a chat → tap the name → <b>Export chat</b> → <b>Without media</b></li>
+      <li>Save / AirDrop the <b>.txt</b> here (unzip if needed), repeat for your favorite people</li>
+    </ol>
+    <label class="drop" id="drop-whatsapp">
+      <span id="drop-whatsapp-txt">Drop <b>WhatsApp Chat with ….txt</b> files here — several at once is fine</span>
+      <input type="file" accept=".txt,text/plain" multiple>
+    </label>
+    <h3 class="subsrc">LinkedIn connections</h3>
+    <ol class="howto">
+      <li>LinkedIn → <b>Settings → Data privacy → Get a copy of your data</b> → larger archive</li>
+      <li>The email takes about a day — your progress is saved, come back and drop <b>Connections.csv</b></li>
+    </ol>
+    <label class="drop" id="drop-linkedin">
+      <span id="drop-linkedin-txt">Already have it? Drop <b>Connections.csv</b> here</span>
+      <input type="file" accept=".csv,text/csv" multiple>
+    </label>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn primary" data-goto="2">Back to sources</button>
@@ -511,13 +506,17 @@
       <button class="btn" data-back>Back</button>
       <button class="btn primary" id="grow">Grow my forest</button>
     </div>
+    <p class="hint warn" id="final-history-warn" style="display:none"><b>Heads up — no message
+      history was added.</b> Your forest will be flat: every tree the same size, no closeness,
+      no "gone quiet" reminders, and weaker grove clustering. Go back and add iMessage,
+      WhatsApp or social messages any time to bring it to life.</p>
     <p class="hint" id="grow-note"></p>
     <p class="hint">Enjoying this? <a class="kofi" href="https://ko-fi.com/lauragao"
       target="_blank" rel="noopener">&#9825; Support this project</a> — it keeps the forest free for everyone.</p>
   </section>
 </div>
 
-<div class="illus"><canvas id="illus-canvas" width="220" height="420"></canvas></div>
+<div class="illus" aria-hidden="true"><canvas id="illus-canvas" width="220" height="420"></canvas></div>
 </div></div>
 
 <script>
@@ -581,6 +580,17 @@
     b.addEventListener("click", () => go(step - 1)));
   document.querySelectorAll("[data-goto]").forEach(b =>
     b.addEventListener("click", () => go(+b.dataset.goto)));
+  /* leaving the hub requires at least one source (or hand-planted friends) */
+  document.getElementById("done-collecting").addEventListener("click", () => {
+    const anything = state.contacts.length || state.linkedin.length || state.messages.length ||
+      state.whatsapp.length || state.social.length || state.manual.length;
+    if (!anything) {
+      const w = document.getElementById("empty-warn");
+      w.style.display = ""; w.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    go(7);
+  });
 
   function renderHub() {
     const mark = (id, n) => {
@@ -591,11 +601,16 @@
       if (n > 0) card.querySelector(".badge").textContent = "✓";
     };
     mark("hub-c", state.contacts.length);
-    mark("hub-l", state.linkedin.length);
     mark("hub-m", state.messages.length);
-    mark("hub-w", state.whatsapp.length);
-    mark("hub-s", state.social.length);
+    mark("hub-s", state.social.length + state.whatsapp.length + state.linkedin.length);
     mark("hub-h", state.manual.length);
+    // no message history = a flat forest; say so before they finish collecting
+    const anyHistory = state.messages.length || state.whatsapp.length ||
+      state.social.some(x => x.messages > 0);
+    const anything = state.contacts.length || state.linkedin.length || state.messages.length ||
+      state.whatsapp.length || state.social.length || state.manual.length;
+    document.getElementById("history-warn").style.display = anything && !anyHistory ? "" : "none";
+    if (anything) document.getElementById("empty-warn").style.display = "none";
     saveDraft();
   }
 
@@ -1228,6 +1243,10 @@
     document.getElementById("final-lead").textContent = people.length
       ? "Here's what your forest will grow from:"
       : "Go back and add at least one source — or explore the demo forest and come back later.";
+    const anyHistory2 = state.messages.length || state.whatsapp.length ||
+      state.social.some(x => x.messages > 0);
+    document.getElementById("final-history-warn").style.display =
+      people.length && !anyHistory2 ? "" : "none";
     document.getElementById("grow-note").textContent = (state.ai
       ? "Claude will write short profiles while your forest grows. "
       : "You can re-run any step later. ") +

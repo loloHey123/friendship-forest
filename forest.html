@@ -182,8 +182,11 @@
     background: rgba(240, 180, 41, .08); }
   .settings-menu .kofi-btn:hover { background: #f0b429; color: #1c241a; }
   .settings-menu .kofi-btn .bi { stroke: currentColor; }
-  .settings-menu .danger-btn { color: #c94f4f; }
-  .settings-menu .danger-btn .bi { stroke: #c94f4f; }
+  .settings-menu .danger-btn { color: #b04343; }
+  .settings-menu .danger-btn .bi { stroke: currentColor; }
+  @media (prefers-color-scheme: dark) { .settings-menu .danger-btn { color: #ef8a8a; } }
+  :root[data-theme="light"] .settings-menu .danger-btn { color: #b04343; }
+  :root[data-theme="dark"] .settings-menu .danger-btn { color: #ef8a8a; }
   .sync-modal { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45);
     display: flex; align-items: center; justify-content: center; padding: 16px; }
   .sync-card { background: var(--panel); border: 2px solid var(--panel-line);
@@ -200,7 +203,10 @@
   .sync-card input:focus-visible { border-color: var(--accent); outline: none; }
   .sync-status { min-height: 18px; margin-top: 10px; font-family: var(--mono);
     font-size: 12px; color: var(--accent); overflow-wrap: anywhere; }
-  .sync-status.bad { color: #c94f4f; }
+  .sync-status.bad { color: #b04343; }
+  @media (prefers-color-scheme: dark) { .sync-status.bad { color: #ef8a8a; } }
+  :root[data-theme="light"] .sync-status.bad { color: #b04343; }
+  :root[data-theme="dark"] .sync-status.bad { color: #ef8a8a; }
   .sync-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .sync-acts button { font-family: var(--mono); font-size: 12.5px; cursor: pointer;
     border-radius: 18px; padding: 9px 16px; font-weight: 600;
@@ -518,10 +524,10 @@
     </div>
     <div class="spacer"></div>
     <button id="ask-toggle" class="btn" aria-pressed="false" title="Search friends or ask a question"><svg class="bi" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg> Search</button>
-    <button id="filter-toggle" class="btn" aria-pressed="false" title="Filters & views"><svg class="bi" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg></button>
-    <button id="board-top" class="btn" title="Forest noticeboard"><svg class="bi" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 17v4M8 21h8"/></svg></button>
+    <button id="filter-toggle" class="btn" aria-pressed="false" title="Filters & views" aria-label="Filters and views"><svg class="bi" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg></button>
+    <button id="board-top" class="btn" title="Forest noticeboard" aria-label="Forest noticeboard"><svg class="bi" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 17v4M8 21h8"/></svg></button>
     <button id="roam-toggle" class="btn roam-btn" aria-pressed="false" title="Walk the forest as a farmer">Roam</button>
-    <button id="photo-btn" class="btn" title="Copy a picture of the forest"><svg class="bi" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+    <button id="photo-btn" class="btn" title="Copy a picture of the forest" aria-label="Copy a picture of the forest"><svg class="bi" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
     <div class="settings-wrap">
       <button id="settings-btn" class="btn" aria-pressed="false" title="Settings" aria-label="Settings"><svg class="bi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div class="settings-menu" id="settings-menu">
@@ -586,7 +592,7 @@
   </div>
 
   <div class="tooltip" id="tooltip"></div>
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="photo-modal" id="chop-modal">
     <div class="photo-box" style="max-width:430px">
       <div style="font-family:var(--mono);font-weight:700;font-size:15px;margin-bottom:9px">🪓 Cut down <span id="chop-name"></span>'s tree?</div>
@@ -614,7 +620,7 @@
     </div>
   </div>
 
-  <aside class="panel" id="panel" aria-live="polite">
+  <aside class="panel" id="panel" aria-live="polite" role="complementary" aria-label="Friend details">
     <button class="panel-close" id="panel-close" aria-label="Close">✕</button>
     <div class="panel-scroll" id="panel-body"></div>
   </aside>
@@ -4735,6 +4741,9 @@
     closeAllPopups("none");
     const wrap = document.createElement("div");
     wrap.className = "sync-modal";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "Sync via GitHub Gist");
     const gid = localStorage.getItem("ff-gist-id") || "";
     wrap.innerHTML = '<div class="sync-card">' +
       '<h3>Sync via GitHub Gist</h3>' +
@@ -4756,7 +4765,9 @@
       $("sync-status").classList.toggle("bad", !!bad); };
     const close = () => wrap.remove();
     wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    wrap.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
     $("sync-close").addEventListener("click", close);
+    $("sync-token").focus();
     const creds = () => {
       const token = $("sync-token").value.trim();
       if (!token) { status("paste a GitHub token first", true); $("sync-token").focus(); return null; }
@@ -5139,6 +5150,7 @@
     if (DEMO_MODE || localStorage.getItem("ff-backup-nudged")) return;
     const note = document.createElement("div");
     note.className = "backup-nudge";
+    note.setAttribute("role", "status");
     note.innerHTML = '<span>Your forest lives only in this browser. Keep it safe:</span>' +
       '<button id="nudge-dl">Download backup</button>' +
       '<button id="nudge-sync">Sync via GitHub Gist</button>' +
