@@ -213,6 +213,14 @@
     border: 1.5px solid var(--accent); background: transparent; color: var(--accent); }
   .sync-acts #sync-push { background: var(--accent); color: var(--panel); }
   .sync-acts #sync-close { border-color: var(--panel-line); color: var(--ink-soft); }
+  .danger-card { border-color: #b04343; }
+  .danger-card h3 { color: #b04343; }
+  .sync-acts .danger { background: #b04343; border-color: #b04343; color: #fff; }
+  .sync-acts .danger:disabled { opacity: .4; cursor: not-allowed; }
+  @media (prefers-color-scheme: dark) {
+    .danger-card { border-color: #ef8a8a; } .danger-card h3 { color: #ef8a8a; } }
+  :root[data-theme="dark"] .danger-card { border-color: #ef8a8a; }
+  :root[data-theme="dark"] .danger-card h3 { color: #ef8a8a; }
   .backup-nudge { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
     z-index: 12; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     justify-content: center; max-width: min(92vw, 560px); padding: 10px 14px;
@@ -4818,37 +4826,85 @@
     window.open("https://github.com/loloHey123/friendship-forest", "_blank", "noopener"));
   document.getElementById("set-kofi").addEventListener("click", () =>
     window.open("https://ko-fi.com/lauragao", "_blank", "noopener"));
-  /* deleting a forest is forever: offer a backup, then require typing DELETE */
+  /* deleting a forest is forever: in-page dialog (native confirm/prompt are
+     swallowed in installed PWAs) — offer a backup, then require typing DELETE */
   document.getElementById("set-delete").addEventListener("click", () => {
     if (DEMO_MODE) { toast("this is the demo forest — nothing to delete"); return; }
+    closeAllPopups("none");
     const n = PEOPLE.length;
-    if (window.confirm("Before deleting: download a backup of your " + n +
-      " trees first? You can replant from it later.\n\nOK = download backup first  ·  Cancel = skip the backup"))
+    const wrap = document.createElement("div");
+    wrap.className = "sync-modal";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "Delete this forest");
+    wrap.innerHTML = '<div class="sync-card danger-card">' +
+      '<h3>\u26A0\uFE0F Delete this forest?</h3>' +
+      '<p><b>This permanently deletes all ' + n + ' trees</b>, plus every moment, edit ' +
+      'and setting in this browser. <b>There is no undo</b> and nothing is stored ' +
+      'anywhere else \u2014 once it\u2019s gone, it\u2019s gone.</p>' +
+      '<p>Want a way back? Download a backup first \u2014 you can replant from it any time.</p>' +
+      '<div class="sync-acts"><button id="del-backup">Download backup first</button></div>' +
+      '<label for="del-confirm">Type DELETE to confirm</label>' +
+      '<input id="del-confirm" autocomplete="off" spellcheck="false" placeholder="DELETE">' +
+      '<div class="sync-acts">' +
+      '<button id="del-go" class="danger" disabled>Delete forever</button>' +
+      '<button id="del-cancel">Keep my forest</button></div></div>';
+    document.body.appendChild(wrap);
+    const $ = id => document.getElementById(id);
+    const close = () => wrap.remove();
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    wrap.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    $("del-cancel").addEventListener("click", () => { close(); toast("kept your forest \u2014 nothing deleted"); });
+    $("del-backup").addEventListener("click", () => {
       document.getElementById("set-export").click();
-    const typed = window.prompt(
-      "\u26A0\uFE0F This permanently deletes your forest \u2014 all " + n +
-      " trees, moments, edits and settings in this browser. There is NO undo.\n\n" +
-      "Type DELETE to confirm:");
-    if (typed === null) { toast("kept your forest \u2014 nothing deleted"); return; }
-    if (typed.trim().toUpperCase() !== "DELETE") {
-      toast("that wasn't DELETE \u2014 forest kept"); return; }
-    ["ff-data", "ff-draft", "ff-state", "ff-avatar", "ff-walkers", "ff-grave",
-     "ff-felled", "ff-edits", "ff-notified", "ff-backup-nudged", "ff-gist-id"]
-      .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
-    try { Object.keys(localStorage).filter(k => k.startsWith("ff-eggs-"))
-      .forEach(k => localStorage.removeItem(k)); } catch (e) {}
-    window.location.href = "onboard.html";
+      $("del-backup").textContent = "Backup downloaded \u2713";
+    });
+    $("del-confirm").addEventListener("input", () => {
+      $("del-go").disabled = $("del-confirm").value.trim().toUpperCase() !== "DELETE";
+    });
+    $("del-go").addEventListener("click", () => {
+      if ($("del-go").disabled) return;
+      ["ff-data", "ff-draft", "ff-state", "ff-avatar", "ff-walkers", "ff-grave",
+       "ff-felled", "ff-edits", "ff-notified", "ff-backup-nudged", "ff-gist-id"]
+        .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+      try { Object.keys(localStorage).filter(k => k.startsWith("ff-eggs-"))
+        .forEach(k => localStorage.removeItem(k)); } catch (e) {}
+      window.location.href = "onboard.html";
+    });
+    $("del-confirm").focus();
   });
 
   /* ---- settings: Claude key, export, import ---- */
   document.getElementById("set-key").addEventListener("click", () => {
-    const cur = localStorage.getItem("ff-key") || "";
-    const k = window.prompt(
-      "Anthropic API key for AI answers in search (stored only in this browser's localStorage — leave empty to clear):",
-      cur);
-    if (k === null) return;
-    if (k.trim()) { localStorage.setItem("ff-key", k.trim()); toast("Claude connected"); }
-    else { localStorage.removeItem("ff-key"); toast("Claude key cleared"); }
+    closeAllPopups("none");
+    const wrap = document.createElement("div");
+    wrap.className = "sync-modal";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "Claude API key");
+    wrap.innerHTML = '<div class="sync-card">' +
+      '<h3>Claude API key</h3>' +
+      '<p>Powers AI answers in search. Stored only in this browser\u2019s localStorage ' +
+      'and sent only to Anthropic. Leave empty and save to clear it.</p>' +
+      '<label for="key-input">API key</label>' +
+      '<input id="key-input" type="password" autocomplete="off" placeholder="sk-ant-\u2026" value="' +
+        esc(localStorage.getItem("ff-key") || "") + '">' +
+      '<div class="sync-acts">' +
+      '<button id="key-save">Save</button>' +
+      '<button id="key-cancel">Cancel</button></div></div>';
+    document.body.appendChild(wrap);
+    const $ = id => document.getElementById(id);
+    const close = () => wrap.remove();
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    wrap.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    $("key-cancel").addEventListener("click", close);
+    $("key-save").addEventListener("click", () => {
+      const k = $("key-input").value.trim();
+      if (k) { localStorage.setItem("ff-key", k); toast("Claude connected"); }
+      else { localStorage.removeItem("ff-key"); toast("Claude key cleared"); }
+      close();
+    });
+    $("key-input").focus();
   });
   document.getElementById("set-export").addEventListener("click", () => {
     const a = document.createElement("a");
@@ -5370,7 +5426,7 @@
     void acts.offsetWidth;                            // restart the animation
     acts.classList.add("flash");
     acts.scrollIntoView({ block: "nearest" });
-    alert("You have unsaved changes. Save them or hit Cancel before moving on.");
+    toast("unsaved changes — Save or Cancel before moving on");
     return true;
   }
   function closePanel() {

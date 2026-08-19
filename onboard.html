@@ -141,6 +141,15 @@
     background: color-mix(in srgb, var(--gold) 16%, transparent);
     border: 1.5px solid var(--gold); border-radius: 12px; padding: 10px 14px; }
   .subsrc { font-size: 17px; margin: 26px 0 2px; }
+  .modal { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-card { background: var(--app); border: 2px solid var(--gold); border-radius: 18px;
+    padding: 22px 24px; width: min(92vw, 470px); font-size: 14.5px; line-height: 1.6;
+    color: var(--ink); box-shadow: 0 18px 50px rgba(0,0,0,.3); }
+  .modal-card h3 { font-size: 20px; margin: 0 0 8px; }
+  .modal-card p { margin: 0 0 10px; }
+  .modal-acts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .modal-acts .btn { padding: 12px 20px; font-size: 14px; }
   .hint a.src { color: var(--green); font-weight: 700; text-decoration-color: var(--lime-deep); }
   .hint a.src:hover { color: var(--lime-deep); }
   @media (prefers-color-scheme: dark) { .hint a.src { color: var(--lime); } }
@@ -200,8 +209,7 @@
   .privacy { display: flex; gap: 12px; align-items: flex-start; margin-top: 18px;
     background: color-mix(in srgb, var(--lime) 16%, transparent);
     border: 2px solid var(--lime-deep); border-radius: 18px; padding: 16px 18px;
-    font-size: 15px; line-height: 1.6; color: var(--ink); font-weight: 600;
-    max-width: 56ch; }
+    font-size: 15px; line-height: 1.6; color: var(--ink); font-weight: 600; }
   .privacy::before { content: ""; flex-shrink: 0; width: 26px; height: 26px; margin-top: 1px;
     background-color: var(--green);
     -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>') center / contain no-repeat;
@@ -342,10 +350,6 @@
         <h3>By hand <span class="tag fast">always works</span></h3>
         <p>No exports needed. Type friends in one at a time, starting with your favorites.</p></button>
     </div>
-    <p class="hint warn" id="history-warn" role="status" style="display:none"><b>No message history yet.</b>
-      Contacts alone make a flat forest: without iMessage, WhatsApp or social messages,
-      trees can't grow with closeness, glow for reconnecting, or cluster by who you
-      actually talk to — everyone ends up the same size.</p>
     <p class="hint warn" id="empty-warn" role="alert" style="display:none"><b>Nothing collected yet.</b>
       Add at least one source — or plant a few friends by hand — before moving on.</p>
     <div class="grow-space"></div>
@@ -580,7 +584,8 @@
     b.addEventListener("click", () => go(step - 1)));
   document.querySelectorAll("[data-goto]").forEach(b =>
     b.addEventListener("click", () => go(+b.dataset.goto)));
-  /* leaving the hub requires at least one source (or hand-planted friends) */
+  /* leaving the hub requires at least one source (or hand-planted friends);
+     no message history gets a "flat forest" confirmation modal before moving on */
   document.getElementById("done-collecting").addEventListener("click", () => {
     const anything = state.contacts.length || state.linkedin.length || state.messages.length ||
       state.whatsapp.length || state.social.length || state.manual.length;
@@ -589,7 +594,30 @@
       w.style.display = ""; w.scrollIntoView({ block: "nearest" });
       return;
     }
-    go(7);
+    const anyHistory = state.messages.length || state.whatsapp.length ||
+      state.social.some(x => x.messages > 0);
+    if (anyHistory) { go(7); return; }
+    const wrap = document.createElement("div");
+    wrap.className = "modal";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "No message history yet");
+    wrap.innerHTML = '<div class="modal-card">' +
+      '<h3>No message history yet</h3>' +
+      '<p>Contacts alone make a <b>flat forest</b>: without iMessage, WhatsApp or social ' +
+      'messages, trees can\u2019t grow with closeness, glow for reconnecting, or cluster by ' +
+      'who you actually talk to \u2014 everyone ends up the same size.</p>' +
+      '<p>You can always come back and add history later.</p>' +
+      '<div class="modal-acts">' +
+      '<button class="btn" id="hist-back">Add message history</button>' +
+      '<button class="btn primary" id="hist-go">Continue anyway</button></div></div>';
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    wrap.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    document.getElementById("hist-back").addEventListener("click", close);
+    document.getElementById("hist-go").addEventListener("click", () => { close(); go(7); });
+    document.getElementById("hist-back").focus();
   });
 
   function renderHub() {
@@ -604,12 +632,8 @@
     mark("hub-m", state.messages.length);
     mark("hub-s", state.social.length + state.whatsapp.length + state.linkedin.length);
     mark("hub-h", state.manual.length);
-    // no message history = a flat forest; say so before they finish collecting
-    const anyHistory = state.messages.length || state.whatsapp.length ||
-      state.social.some(x => x.messages > 0);
     const anything = state.contacts.length || state.linkedin.length || state.messages.length ||
       state.whatsapp.length || state.social.length || state.manual.length;
-    document.getElementById("history-warn").style.display = anything && !anyHistory ? "" : "none";
     if (anything) document.getElementById("empty-warn").style.display = "none";
     saveDraft();
   }
@@ -1272,7 +1296,8 @@
     try {
       localStorage.setItem("ff-data", JSON.stringify(data));
     } catch (e) {
-      alert("Couldn't save to this browser (storage full or blocked): " + e.message);
+      document.getElementById("grow-note").textContent =
+        "Couldn't save to this browser (storage full or blocked): " + e.message;
       btn.disabled = false; btn.textContent = "Grow my forest"; return;
     }
     try { localStorage.removeItem("ff-draft"); } catch (e) {}
