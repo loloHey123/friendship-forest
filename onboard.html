@@ -41,9 +41,9 @@
   .app { background: var(--app); border-radius: 32px; display: flex;
     min-height: calc(100vh - 116px); overflow: hidden; position: relative; }
 
-  .content { flex: 1; padding: 34px 46px 30px; display: flex; flex-direction: column;
+  .content { flex: 1 1 560px; min-width: 0; padding: 34px 46px 30px; display: flex; flex-direction: column;
     min-width: 0; }
-  .illus { flex: none; width: 378px; margin: 16px; border-radius: 26px;
+  .illus { flex: 1 1 380px; min-width: 340px; max-width: 560px; margin: 16px; border-radius: 26px;
     overflow: hidden; position: relative;
     background: linear-gradient(160deg, #dff0be, #a8d476); }
   @media (prefers-color-scheme: dark) { .illus { background: linear-gradient(160deg, #22301a, #16220f); } }
@@ -74,7 +74,7 @@
 
   .progress-zone { min-height: 40px; margin-bottom: 8px; }
   .progress { display: flex; gap: 7px; align-items: center; }
-  .dash { width: 44px; height: 7px; border-radius: 5px; background: var(--line);
+  .dash { flex: 1; height: 7px; border-radius: 5px; background: var(--line);
     transition: background .3s; }
   .dash.done { background: var(--green-dark); }
   @media (prefers-color-scheme: dark) { .dash.done { background: var(--lime-deep); } }
@@ -141,6 +141,18 @@
     background: color-mix(in srgb, var(--gold) 16%, transparent);
     border: 1.5px solid var(--gold); border-radius: 12px; padding: 10px 14px; }
   .subsrc { font-size: 17px; margin: 26px 0 2px; }
+  .choicegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+  @media (max-width: 560px) { .choicegrid { grid-template-columns: 1fr; } }
+  .choice { text-align: left; cursor: pointer; border: 2px solid var(--line);
+    border-radius: 18px; background: var(--app); padding: 16px; font: inherit;
+    color: var(--ink); display: flex; flex-direction: column; gap: 6px;
+    transition: all .15s; }
+  .choice svg { width: 64px; height: 64px; image-rendering: pixelated; }
+  .choice b { font-size: 16px; font-weight: 800; }
+  .choice span { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .choice:hover { border-color: var(--lime-deep); transform: translateY(-2px);
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--lime-deep) 25%, transparent); }
+  .choice:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   .modal { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45);
     display: flex; align-items: center; justify-content: center; padding: 16px; }
   .modal-card { background: var(--app); border: 2px solid var(--gold); border-radius: 18px;
@@ -238,7 +250,8 @@
     border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
     cursor: pointer; }
   .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
-  a.kofi { display: inline-block; margin-left: 8px; padding: 4px 14px; border-radius: 999px;
+  a.kofi { display: inline-block; margin-left: 8px; padding: 9px 22px; border-radius: 999px;
+    font-size: 15px;
     border: 1.5px solid var(--gold); color: #6b4f0a; text-decoration: none;
     font-weight: 800; background: color-mix(in srgb, var(--gold) 14%, transparent);
     transition: all .15s; }
@@ -293,15 +306,10 @@
     <div class="privacy"><span><b>Your people stay yours — nothing is sent to us. Ever.</b>
       There is no server and no account: everything is parsed and stored on this device
       only, and you can delete it all whenever you like.</span></div>
-    <div class="btnrow" style="margin-top:18px">
+    <div class="btnrow" style="margin-top:28px">
       <a class="btn demo-btn" href="forest.html" target="_blank" rel="noopener">See the demo forest →</a>
       <button class="btn primary" data-next>Start planting</button>
     </div>
-    <div class="btnrow" style="margin-top:10px">
-      <button class="btn ghost" id="restore-btn">Restore a saved forest</button>
-      <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
-    </div>
-    <p class="hint" id="restore-err" role="alert" style="display:none;color:#c94f4f"></p>
     <div class="grow-space"></div>
     <p class="hint">Free and open source — <a class="src" href="https://github.com/loloHey123/friendship-forest"
       target="_blank" rel="noopener">read the code, fork it, run your own</a>.
@@ -317,10 +325,41 @@
       <input id="f-name" placeholder="e.g. Alex Rivera" autocomplete="name"></div>
     <div class="field"><label for="f-city">Your city</label>
       <input id="f-city" placeholder="e.g. San Francisco" autocomplete="address-level2"></div>
+    <div class="choicegrid">
+      <button class="choice" id="choose-new">
+        <svg viewBox="0 0 48 48" aria-hidden="true" shape-rendering="crispEdges">
+          <rect x="22" y="30" width="4" height="10" fill="#7a5433"/>
+          <rect x="18" y="22" width="12" height="8" fill="#7cc85a"/>
+          <rect x="20" y="18" width="8" height="6" fill="#57a83f"/>
+          <rect x="30" y="34" width="3" height="6" fill="#7a5433"/>
+          <rect x="28" y="30" width="7" height="5" fill="#7cc85a"/>
+          <rect x="12" y="36" width="3" height="4" fill="#7a5433"/>
+          <rect x="10" y="32" width="7" height="5" fill="#a6d97f"/>
+          <rect x="6" y="42" width="36" height="3" fill="#8fc653"/>
+        </svg>
+        <b>Start a new forest</b>
+        <span>Plant from scratch with the sources on the next step.</span>
+      </button>
+      <button class="choice" id="choose-import">
+        <svg viewBox="0 0 48 48" aria-hidden="true" shape-rendering="crispEdges">
+          <rect x="21" y="26" width="6" height="16" fill="#7a5433"/>
+          <rect x="10" y="10" width="28" height="18" fill="#57a83f"/>
+          <rect x="14" y="6" width="20" height="8" fill="#7cc85a"/>
+          <rect x="6" y="16" width="8" height="10" fill="#3c7f2c"/>
+          <rect x="34" y="16" width="8" height="10" fill="#3c7f2c"/>
+          <rect x="6" y="42" width="36" height="3" fill="#8fc653"/>
+          <rect x="36" y="30" width="8" height="8" fill="none" stroke="#3f6d34" stroke-width="2.5"/>
+          <path d="M40 26v8m0 0l-3-3m3 3l3-3" stroke="#3f6d34" stroke-width="2.5" fill="none"/>
+        </svg>
+        <b>Import a previous forest</b>
+        <span>Replant from a backup file exported in Settings.</span>
+      </button>
+      <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
+    </div>
+    <p class="hint" id="restore-err" role="alert" style="display:none;color:#c94f4f"></p>
     <div class="grow-space"></div>
     <div class="btnrow">
       <button class="btn" data-back>Back</button>
-      <button class="btn primary" data-next id="name-next">Continue</button>
     </div>
   </section>
 
@@ -1305,9 +1344,14 @@
     window.location.href = "forest.html";
   });
 
-  /* restore: replant from an exported friend-forest.json backup */
-  document.getElementById("restore-btn").addEventListener("click", () =>
-    document.getElementById("restore-file").click());
+  /* step 1 choice boxes: fresh forest continues, import replants from a backup */
+  function saveYou() {
+    state.name = document.getElementById("f-name").value.trim();
+    state.city = document.getElementById("f-city").value.trim(); saveDraft();
+  }
+  document.getElementById("choose-new").addEventListener("click", () => { saveYou(); go(2); });
+  document.getElementById("choose-import").addEventListener("click", () => {
+    saveYou(); document.getElementById("restore-file").click(); });
   document.getElementById("restore-file").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
     e.target.value = "";
@@ -1315,6 +1359,8 @@
     file.text().then(text => {
       const j = JSON.parse(text);
       if (!Array.isArray(j.people) || !j.people.length) throw new Error("no people[] in that file");
+      if (state.name && !(j.gardener && j.gardener.name))
+        j.gardener = { name: state.name, city: state.city };
       localStorage.setItem("ff-data", JSON.stringify(j));
       try { localStorage.removeItem("ff-draft"); } catch (e2) {}
       window.location.href = "forest.html";
