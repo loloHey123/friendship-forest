@@ -177,6 +177,8 @@
     color: var(--panel); }
   .fchip small { opacity: .6; }
 
+  .settings-menu .kofi-btn { color: #e0608a; }
+  .settings-menu .kofi-btn .bi { stroke: #e0608a; }
   .backup-nudge { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
     z-index: 12; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     justify-content: center; max-width: min(92vw, 560px); padding: 10px 14px;
@@ -504,6 +506,7 @@
         <button id="set-export"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export forest data</button>
         <button id="set-import"><svg class="bi" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Import forest data</button>
         <button id="set-source"><svg class="bi" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg> Source on GitHub — fork your own</button>
+        <button id="set-kofi" class="kofi-btn"><svg class="bi" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Support this project</button>
       </div>
       <input type="file" id="import-file" accept=".json,application/json" style="display:none">
     </div>
@@ -4788,6 +4791,8 @@
   document.getElementById("set-sync").addEventListener("click", gistSync);
   document.getElementById("set-source").addEventListener("click", () =>
     window.open("https://github.com/loloHey123/friendship-forest", "_blank", "noopener"));
+  document.getElementById("set-kofi").addEventListener("click", () =>
+    window.open("https://ko-fi.com/lauragao", "_blank", "noopener"));
 
   /* ---- settings: Claude key, export, import ---- */
   document.getElementById("set-key").addEventListener("click", () => {

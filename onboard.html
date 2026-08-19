@@ -205,6 +205,10 @@
     border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
     cursor: pointer; }
   .mchip:hover { border-color: #c94f4f; color: #c94f4f; }
+  a.kofi { display: inline-block; margin-left: 8px; padding: 3px 12px; border-radius: 999px;
+    border: 1.5px solid var(--line); color: var(--ink-soft); text-decoration: none;
+    font-weight: 700; transition: all .15s; }
+  a.kofi:hover { border-color: #e0608a; color: #e0608a; transform: translateY(-1px); }
   .mtable { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
   .mtable th { text-align: left; font-size: 11px; letter-spacing: .1em;
     text-transform: uppercase; color: var(--ink-soft); padding: 0 8px 6px; font-weight: 800; }
@@ -258,7 +262,8 @@
       <button class="btn primary" data-next>Start planting</button>
     </div>
     <p class="hint">Free and open source — <a href="https://github.com/loloHey123/friendship-forest"
-      target="_blank" rel="noopener">read the code, fork it, run your own</a>.</p>
+      target="_blank" rel="noopener">read the code, fork it, run your own</a>.
+      <a class="kofi" href="https://ko-fi.com/lauragao" target="_blank" rel="noopener">&#9825; Support this project</a></p>
   </section>
 
   <!-- STEP 1 · you -->
@@ -479,6 +484,8 @@
       <button class="btn primary" id="grow">Grow my forest</button>
     </div>
     <p class="hint" id="grow-note"></p>
+    <p class="hint">Enjoying this? <a class="kofi" href="https://ko-fi.com/lauragao"
+      target="_blank" rel="noopener">&#9825; Support this project</a> — it keeps the forest free for everyone.</p>
   </section>
 </div>
 
